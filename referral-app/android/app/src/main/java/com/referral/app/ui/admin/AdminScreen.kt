@@ -41,6 +41,16 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.referral.app.data.DomainRequest
 import com.referral.app.data.ReportGroup
+import androidx.compose.material.icons.filled.CheckCircle
+import com.referral.app.ui.common.AppCard
+import com.referral.app.ui.common.AppTopBar
+import com.referral.app.ui.common.Banner
+import com.referral.app.ui.common.EmptyState
+import com.referral.app.ui.common.LoadingBox
+import com.referral.app.ui.common.Pill
+import com.referral.app.ui.common.SmallButton
+import com.referral.app.ui.common.Tone
+import com.referral.app.ui.theme.Space
 import com.referral.app.ui.common.ConfirmDialog
 import com.referral.app.ui.common.ConfirmRequest
 
@@ -53,15 +63,11 @@ fun AdminScreen(onBack: () -> Unit, viewModel: AdminViewModel = hiltViewModel())
     ConfirmDialog(confirm, onDismiss = { confirm = null })
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Admin") },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") } },
-            )
-        },
+        topBar = { AppTopBar("Admin", onBack = onBack, subtitle = "Reports and company requests") },
+        containerColor = MaterialTheme.colorScheme.background,
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding)) {
-            PrimaryTabRow(selectedTabIndex = ui.tab.ordinal) {
+            PrimaryTabRow(selectedTabIndex = ui.tab.ordinal, containerColor = MaterialTheme.colorScheme.background) {
                 AdminTab.entries.forEach { t ->
                     val n = if (t == AdminTab.REPORTS) ui.reports.size else ui.domains.size
                     Tab(selected = ui.tab == t, onClick = { viewModel.selectTab(t) }, text = { Text("${t.label} ($n)") })
@@ -69,19 +75,19 @@ fun AdminScreen(onBack: () -> Unit, viewModel: AdminViewModel = hiltViewModel())
             }
             PullToRefreshBox(isRefreshing = false, onRefresh = viewModel::load, modifier = Modifier.fillMaxSize()) {
                 if (ui.loading) {
-                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+                    LoadingBox()
                     return@PullToRefreshBox
                 }
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    contentPadding = PaddingValues(horizontal = Space.screen, vertical = Space.md),
+                    verticalArrangement = Arrangement.spacedBy(Space.md),
                 ) {
-                    ui.message?.let { m -> item { Text(m, color = MaterialTheme.colorScheme.primary) } }
-                    ui.error?.let { m -> item { Text(m, color = MaterialTheme.colorScheme.error) } }
+                    ui.message?.let { m -> item { Banner(m, Tone.SUCCESS) } }
+                    ui.error?.let { m -> item { Banner(m, Tone.ERROR) } }
 
                     if (ui.tab == AdminTab.REPORTS) {
-                        if (ui.reports.isEmpty()) item { Text("No open reports.") }
+                        if (ui.reports.isEmpty()) item { EmptyState(Icons.Filled.CheckCircle, "No open reports", "Nothing needs moderating right now.") }
                         items(ui.reports, key = { it.key }) { g ->
                             ReportCard(
                                 g, busy = ui.busyKey == g.key,
@@ -105,7 +111,7 @@ fun AdminScreen(onBack: () -> Unit, viewModel: AdminViewModel = hiltViewModel())
                             )
                         }
                     } else {
-                        if (ui.domains.isEmpty()) item { Text("No company requests waiting.") }
+                        if (ui.domains.isEmpty()) item { EmptyState(Icons.Filled.CheckCircle, "No company requests", "New email domains people try to verify with show up here.") }
                         items(ui.domains, key = { it.domain }) { d ->
                             DomainCard(
                                 d, busy = ui.busyKey == d.domain,
@@ -129,12 +135,12 @@ fun AdminScreen(onBack: () -> Unit, viewModel: AdminViewModel = hiltViewModel())
 
 @Composable
 private fun ReportCard(g: ReportGroup, busy: Boolean, onDismiss: () -> Unit, onUphold: () -> Unit) {
-    Card(Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text(
-                "${if (g.targetType == "job") "Post" else "User"}: ${g.label ?: "(deleted)"}",
-                style = MaterialTheme.typography.titleMedium,
-            )
+    AppCard {
+        run {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(g.label ?: "(deleted)", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+                Pill(if (g.targetType == "job") "Post" else "User", MaterialTheme.colorScheme.surfaceVariant, MaterialTheme.colorScheme.onSurfaceVariant)
+            }
             Text("Now: ${g.targetStatus ?: "unknown"}", style = MaterialTheme.typography.bodySmall)
             Text(
                 "${g.reportCount} report${if (g.reportCount == 1) "" else "s"} · " +
@@ -143,9 +149,9 @@ private fun ReportCard(g: ReportGroup, busy: Boolean, onDismiss: () -> Unit, onU
                 color = if ("payment_request" in g.reasons) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
             )
             g.details.orEmpty().forEach { Text("“$it”", style = MaterialTheme.typography.bodySmall) }
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedButton(onClick = onDismiss, enabled = !busy) { Text("Dismiss") }
-                Button(onClick = onUphold, enabled = !busy) { Text(if (g.targetType == "job") "Close post" else "Suspend user") }
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                SmallButton("Dismiss", onDismiss, enabled = !busy)
+                SmallButton(if (g.targetType == "job") "Close post" else "Suspend user", onUphold, enabled = !busy, filled = true, destructive = true)
             }
         }
     }
@@ -153,13 +159,13 @@ private fun ReportCard(g: ReportGroup, busy: Boolean, onDismiss: () -> Unit, onU
 
 @Composable
 private fun DomainCard(d: DomainRequest, busy: Boolean, onApprove: () -> Unit, onReject: () -> Unit) {
-    Card(Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    AppCard {
+        run {
             Text(d.domain, style = MaterialTheme.typography.titleMedium)
             Text("${d.requestCount} people tried to verify with this domain", style = MaterialTheme.typography.bodyMedium)
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(onClick = onApprove, enabled = !busy) { Text("Approve") }
-                TextButton(onClick = onReject, enabled = !busy) { Text("Reject") }
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                SmallButton("Reject", onReject, enabled = !busy, destructive = true)
+                SmallButton("Approve", onApprove, enabled = !busy, filled = true)
             }
         }
     }

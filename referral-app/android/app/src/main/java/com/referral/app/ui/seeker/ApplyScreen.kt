@@ -1,40 +1,54 @@
 package com.referral.app.ui.seeker
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.referral.app.ui.common.AppCard
+import com.referral.app.ui.common.AppTopBar
+import com.referral.app.ui.common.Banner
+import com.referral.app.ui.common.CompanyAvatar
 import com.referral.app.ui.common.ConfirmDialog
 import com.referral.app.ui.common.ConfirmRequest
+import com.referral.app.ui.common.EmptyState
+import com.referral.app.ui.common.LoadingBox
+import com.referral.app.ui.common.PrimaryButton
+import com.referral.app.ui.common.Tone
+import com.referral.app.ui.theme.Space
+import com.referral.app.ui.theme.extra
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ApplyScreen(
     onBack: () -> Unit,
@@ -46,70 +60,78 @@ fun ApplyScreen(
     ConfirmDialog(confirm, onDismiss = { confirm = null })
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Apply") },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") } },
-            )
-        },
+        topBar = { if (ui.resultStatus == null) AppTopBar("Ask for a referral", onBack = onBack) },
+        containerColor = MaterialTheme.colorScheme.background,
     ) { padding ->
         val job = ui.job
         when {
-            ui.loading -> Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
-            }
+            ui.loading -> LoadingBox(Modifier.padding(padding))
             ui.resultStatus != null -> Done(ui.resultStatus!!, Modifier.padding(padding), onDone)
-            job == null -> Box(Modifier.fillMaxSize().padding(padding).padding(24.dp)) {
-                Text(ui.error ?: "This job is no longer available.")
-            }
+            job == null -> EmptyState(
+                icon = Icons.Filled.Search,
+                title = "This job isn't available",
+                body = ui.error ?: "It may have been closed or filled.",
+                modifier = Modifier.padding(padding),
+            )
             else -> Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
                     .imePadding()
                     .verticalScroll(rememberScrollState())
-                    .padding(24.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+                    .padding(horizontal = Space.screen, vertical = Space.sm),
+                verticalArrangement = Arrangement.spacedBy(Space.lg),
             ) {
-                Text(job.title, style = MaterialTheme.typography.titleLarge)
-                if (job.myApplicationStatus == "withdrawn") {
-                    Text(
-                        "This is your one reapply for this job.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.tertiary,
-                    )
+                AppCard {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.md)) {
+                        CompanyAvatar(job.companyName)
+                        Column(Modifier.weight(1f)) {
+                            Text(job.title, style = MaterialTheme.typography.titleMedium)
+                            Text(job.companyName.orEmpty(), style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
                 }
-                Text(job.companyName.orEmpty(), style = MaterialTheme.typography.titleSmall)
-                Text(
-                    "Your profile and resume go only to ${job.posterFirstName?.ifBlank { null } ?: "the employee"}, " +
-                        "who posted this role. No one else on the app can see them.",
-                    style = MaterialTheme.typography.bodyMedium,
-                )
+                if (job.myApplicationStatus == "withdrawn") Banner("This is your one reapply for this job.", Tone.WARNING)
                 if (job.spotsLeft == 0) {
+                    Banner("All spots are taken, so you'll join the waitlist and move up if someone withdraws.", Tone.WARNING)
+                }
+
+                Row(horizontalArrangement = Arrangement.spacedBy(Space.sm), verticalAlignment = Alignment.Top) {
+                    Icon(Icons.Filled.Lock, contentDescription = null, tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(18.dp))
                     Text(
-                        "All spots are taken, so you'll join the waitlist and move up if someone withdraws.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.tertiary,
+                        "Your profile and resume go only to ${job.posterFirstName?.ifBlank { null } ?: "the employee"}, " +
+                            "who posted this role. No one else on the app can see them.",
+                        style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
 
-                job.questions.forEachIndexed { i, q ->
-                    OutlinedTextField(
-                        value = ui.answers.getOrElse(i) { "" },
-                        onValueChange = { viewModel.onAnswer(i, it) },
-                        label = { Text(q) },
-                        minLines = 2,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
+                if (job.questions.isNotEmpty()) {
+                    Text("A few quick questions", style = MaterialTheme.typography.titleMedium)
+                    job.questions.forEachIndexed { i, q ->
+                        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Text("${i + 1}. $q", style = MaterialTheme.typography.titleSmall)
+                            OutlinedTextField(
+                                value = ui.answers.getOrElse(i) { "" },
+                                onValueChange = { viewModel.onAnswer(i, it) },
+                                placeholder = { Text("Your answer") },
+                                minLines = 2,
+                                modifier = Modifier.fillMaxWidth(),
+                            )
+                        }
+                    }
                 }
 
+                ui.error?.let { Banner(it, Tone.ERROR) }
                 Text(
-                    "${job.applicationsThisWeek} of 10 applications used this week.",
-                    style = MaterialTheme.typography.bodySmall,
+                    "${job.applicationsThisWeek} of 10 applications used this week",
+                    style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                ui.error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
-
-                Button(
+                PrimaryButton(
+                    text = if (job.spotsLeft == 0) "Join the waitlist" else "Send application",
+                    loading = ui.submitting,
+                    enabled = ui.canSubmit,
                     onClick = {
                         val reapply = job.myApplicationStatus == "withdrawn"
                         confirm = ConfirmRequest(
@@ -123,34 +145,39 @@ fun ApplyScreen(
                             onConfirm = viewModel::submit,
                         )
                     },
-                    enabled = ui.canSubmit,
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Text(
-                        when {
-                            ui.submitting -> "Sending…"
-                            job.spotsLeft == 0 -> "Join the waitlist"
-                            else -> "Send application"
-                        },
-                    )
-                }
+                )
+                Spacer(Modifier.height(Space.lg))
             }
         }
     }
 }
 
+/** Success screen: big check, what happens next, Done. */
 @Composable
 private fun Done(status: String, modifier: Modifier, onDone: () -> Unit) {
-    Column(modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    val waitlisted = status == "waitlisted"
+    Column(
+        modifier.fillMaxSize().padding(horizontal = Space.screen, vertical = 48.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(Space.lg, Alignment.CenterVertically),
+    ) {
+        Box(
+            Modifier.size(96.dp).clip(CircleShape)
+                .background(if (waitlisted) MaterialTheme.extra.warningContainer else MaterialTheme.extra.successContainer),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(48.dp),
+                tint = if (waitlisted) MaterialTheme.extra.warning else MaterialTheme.extra.success)
+        }
+        Text(if (waitlisted) "You're on the waitlist" else "Application sent",
+            style = MaterialTheme.typography.headlineMedium, textAlign = TextAlign.Center)
         Text(
-            if (status == "waitlisted") "You're on the waitlist" else "Application sent",
-            style = MaterialTheme.typography.headlineSmall,
+            if (waitlisted) "If a spot opens up you'll move up automatically. We'll notify you."
+            else "The referrer will review it. You'll get a notification at every step, and can track it under Applied.",
+            style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
         )
-        Text(
-            if (status == "waitlisted") "If a spot opens up you'll move up automatically. Track it in My applications."
-            else "The referrer will review it. You'll see every update in My applications.",
-            style = MaterialTheme.typography.bodyMedium,
-        )
-        Button(onClick = onDone, modifier = Modifier.fillMaxWidth()) { Text("Done") }
+        Spacer(Modifier.height(Space.sm))
+        PrimaryButton("Done", onDone)
     }
 }

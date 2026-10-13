@@ -1,6 +1,8 @@
 package com.referral.app.ui.common
 
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -26,16 +28,17 @@ fun ConfirmDialog(request: ConfirmRequest?, onDismiss: () -> Unit) {
     if (request == null) return
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(request.title) },
-        text = { Text(request.message) },
+        containerColor = MaterialTheme.colorScheme.surface,
+        title = { Text(request.title, style = MaterialTheme.typography.titleLarge) },
+        text = { Text(request.message, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) },
         confirmButton = {
-            TextButton(onClick = { onDismiss(); request.onConfirm() }) {
-                Text(
-                    request.confirmLabel,
-                    fontWeight = FontWeight.SemiBold,
-                    color = if (request.destructive) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
-                )
-            }
+            Button(
+                onClick = { onDismiss(); request.onConfirm() },
+                shape = MaterialTheme.shapes.small,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (request.destructive) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+                ),
+            ) { Text(request.confirmLabel, fontWeight = FontWeight.SemiBold) }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
     )

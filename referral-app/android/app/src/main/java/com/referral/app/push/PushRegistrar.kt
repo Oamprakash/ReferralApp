@@ -9,6 +9,7 @@ import com.google.firebase.FirebaseApp
 import com.google.firebase.messaging.FirebaseMessaging
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.serialization.json.buildJsonObject
@@ -35,8 +36,13 @@ class PushRegistrar @Inject constructor(
         sendToServer(token)
     }
 
-    /** Called by PushService when FCM rotates the token. */
+    /**
+     * Called by PushService when FCM issues a new token, and by [register] after sign-in.
+     * Without a session there's no one to link the token to (and the server refuses it), so it waits:
+     * [register] sends the current token as soon as someone signs in.
+     */
     suspend fun sendToServer(token: String) {
+        if (supabase.auth.currentSessionOrNull() == null) return
         runCatching {
             supabase.postgrest.rpc("register_device_token", buildJsonObject {
                 put("p_token", token)

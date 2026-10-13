@@ -31,6 +31,7 @@ data class FeedUiState(
     val companies: List<CompanyOption> = emptyList(),
     val myYears: Int? = null,
     val isAdmin: Boolean = false,
+    val firstName: String? = null,
     val error: String? = null,
 ) {
     val selectedCompanyName: String?
@@ -57,7 +58,9 @@ class FeedViewModel @Inject constructor(
         load(initial = true)
         viewModelScope.launch {
             runCatching { jobs.companies() }.onSuccess { list -> _ui.update { it.copy(companies = list) } }
-            runCatching { profiles.myProfile() }.onSuccess { p -> _ui.update { it.copy(myYears = p?.experienceYears) } }
+            runCatching { profiles.myProfile() }.onSuccess { p ->
+                _ui.update { it.copy(myYears = p?.experienceYears, firstName = p?.fullName?.trim()?.substringBefore(' ')?.ifBlank { null }) }
+            }
             runCatching { safety.amIAdmin() }.onSuccess { a -> _ui.update { it.copy(isAdmin = a) } }
         }
     }
