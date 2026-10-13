@@ -1,9 +1,9 @@
 package com.referral.app.ui.matches
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -12,33 +12,36 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Card
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.referral.app.data.model.JobMatch
+import com.referral.app.ui.common.AppTopBar
+import com.referral.app.ui.common.Banner
+import com.referral.app.ui.common.EmptyState
+import com.referral.app.ui.common.JobCard
+import com.referral.app.ui.common.LoadingBox
+import com.referral.app.ui.common.Pill
+import com.referral.app.ui.common.ScoreRing
+import com.referral.app.ui.common.SmallButton
+import com.referral.app.ui.common.Tone
+import com.referral.app.ui.theme.Space
+import com.referral.app.ui.theme.extra
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MatchesScreen(
-    onBack: () -> Unit,
     onOpenJob: (String) -> Unit,
     onEditProfile: () -> Unit,
     viewModel: MatchesViewModel = hiltViewModel(),
@@ -51,12 +54,8 @@ fun MatchesScreen(
     }
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Best matches") },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") } },
-            )
-        },
+        topBar = { AppTopBar("For you", subtitle = "Open roles ranked by your skills and experience") },
+        containerColor = MaterialTheme.colorScheme.background,
     ) { padding ->
         PullToRefreshBox(
             isRefreshing = ui.refreshing,
@@ -64,91 +63,111 @@ fun MatchesScreen(
             modifier = Modifier.fillMaxSize().padding(padding),
         ) {
             if (ui.loading) {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+                LoadingBox()
                 return@PullToRefreshBox
             }
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+                contentPadding = PaddingValues(horizontal = Space.screen, vertical = Space.sm),
+                verticalArrangement = Arrangement.spacedBy(Space.md),
             ) {
-                item {
-                    Text(
-                        "Ranked by your experience and skills, the same score referrers see when you apply.",
-                        style = MaterialTheme.typography.bodySmall,
-                    )
-                }
-                ui.error?.let { m -> item { Text(m, color = MaterialTheme.colorScheme.error) } }
+                ui.error?.let { m -> item { Banner(m, Tone.ERROR) } }
                 if (ui.profileThin) {
                     item {
-                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Text(
-                                "Add skills to your profile (or upload your resume) for better matches.",
-                                style = MaterialTheme.typography.bodyMedium,
-                            )
-                            OutlinedButton(onClick = onEditProfile) { Text("Update profile") }
-                        }
+                        Banner(
+                            "Add skills to your profile, or upload your resume, for sharper matches.",
+                            Tone.WARNING,
+                            action = { SmallButton("Update profile", onEditProfile) },
+                        )
                     }
                 }
                 if (ui.error == null && ui.matches.isEmpty()) {
-                    item { Text("No open roles match your profile right now. New posts come in daily.") }
+                    item {
+                        EmptyState(
+                            icon = Icons.Filled.Star,
+                            title = "No matches yet",
+                            body = "Nothing open fits your profile right now. New posts come in every day.",
+                            action = { SmallButton("Update profile", onEditProfile, filled = true) },
+                        )
+                    }
                 }
                 items(ui.matches, key = { it.id }) { m -> MatchCard(m, ui.myYears, onClick = { onOpenJob(m.id) }) }
+                if (ui.matches.isNotEmpty()) {
+                    item {
+                        Text(
+                            "Same score referrers see when you apply: up to 50 for experience fit, up to 50 for skills.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(vertical = Space.sm),
+                        )
+                    }
+                }
             }
         }
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun MatchCard(m: JobMatch, myYears: Int?, onClick: () -> Unit) {
-    Card(Modifier.fillMaxWidth().clickable(onClick = onClick)) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(m.title, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
-                Text("${m.score}% match", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+    JobCard(
+        title = m.title,
+        company = m.companyName,
+        team = m.team,
+        location = m.location,
+        experience = m.experienceLabel,
+        workMode = m.workModeLabel,
+        salary = m.salaryRange,
+        freshness = null,
+        onClick = onClick,
+        badge = { ScoreRing(m.score) },
+        footer = {
+            ScoreBar("Skills", m.skillPoints, skillsCaption(m))
+            ScoreBar("Experience", m.experiencePoints(myYears), experienceCaption(m, myYears))
+            if (m.have.isNotEmpty() || m.missing.isNotEmpty()) {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    m.have.forEach { Pill("✓ $it", MaterialTheme.extra.successContainer, MaterialTheme.extra.onSuccessContainer) }
+                    m.missing.forEach { Pill(it, MaterialTheme.colorScheme.surfaceVariant, MaterialTheme.colorScheme.onSurfaceVariant) }
+                }
             }
-            LinearProgressIndicator(progress = { m.score / 100f }, modifier = Modifier.fillMaxWidth())
-            Text(
-                listOfNotNull(m.companyName, m.team, m.location).joinToString(" · "),
-                style = MaterialTheme.typography.bodyMedium,
-            )
-            Text("${m.experienceLabel} · ${m.workModeLabel}", style = MaterialTheme.typography.bodySmall)
-            ScoreBreakdown(m, myYears)
-            if (m.have.isNotEmpty()) {
-                Text("You have: ${m.have.joinToString(", ")}", style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.primary)
-            }
-            if (m.missing.isNotEmpty()) {
-                Text("Missing: ${m.missing.joinToString(", ")}", style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-            if (m.have.isEmpty() && m.missing.isEmpty()) {
-                Text("No skills listed on this post, so it's matched on experience only.",
-                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-            Text(m.confirmedLabel, style = MaterialTheme.typography.labelMedium)
+        },
+    )
+}
+
+/** One half of the score: label, points out of 50, a bar, and why. */
+@Composable
+private fun ScoreBar(label: String, points: Int, caption: String) {
+    val color = when {
+        points >= 40 -> MaterialTheme.extra.success
+        points >= 20 -> MaterialTheme.extra.warning
+        else -> MaterialTheme.colorScheme.error
+    }
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Text(label, style = MaterialTheme.typography.labelMedium, modifier = Modifier.weight(1f))
+            Text("$points/50", style = MaterialTheme.typography.labelMedium, color = color)
         }
+        LinearProgressIndicator(
+            progress = { points / 50f },
+            modifier = Modifier.fillMaxWidth(),
+            color = color,
+            trackColor = MaterialTheme.colorScheme.surfaceVariant,
+            strokeCap = StrokeCap.Round,
+            gapSize = 0.dp,
+            drawStopIndicator = {},
+        )
+        Text(caption, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
-/** Why the score is what it is: two halves of 50, the same rules referrers' scores use. */
-@Composable
-private fun ScoreBreakdown(m: JobMatch, myYears: Int?) {
+private fun skillsCaption(m: JobMatch): String {
     val total = m.have.size + m.missing.size
-    val skills = if (total == 0) "Skills: none listed on the post" else "Skills: ${m.have.size} of $total"
-    val expPts = m.experiencePoints(myYears)
-    val exp = when {
-        myYears == null -> "Experience: add your years to your profile"
-        expPts == 50 -> "Experience: $myYears yrs, in range"
-        myYears > m.expMax -> "Experience: $myYears yrs, above the ${m.expMin}–${m.expMax} yr range"
-        else -> "Experience: $myYears yrs, below the ${m.expMin}–${m.expMax} yr range"
-    }
-    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-        Text("$skills → ${m.skillPoints}/50", style = MaterialTheme.typography.bodySmall)
-        Text(
-            "$exp → $expPts/50",
-            style = MaterialTheme.typography.bodySmall,
-            color = if (expPts < 50) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurface,
-        )
-    }
+    return if (total == 0) "No skills listed on this post" else "You have ${m.have.size} of $total listed skills"
+}
+
+private fun experienceCaption(m: JobMatch, years: Int?): String = when {
+    years == null -> "Add your years of experience to your profile"
+    m.experiencePoints(years) == 50 -> "$years yrs fits the ${m.expMin}–${m.expMax} yr range"
+    years > m.expMax -> "$years yrs is above the ${m.expMin}–${m.expMax} yr range"
+    else -> "$years yrs is below the ${m.expMin}–${m.expMax} yr range"
 }

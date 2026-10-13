@@ -56,6 +56,9 @@ class RootViewModel @Inject constructor(
     }
 
     fun signOut() {
-        viewModelScope.launch { runCatching { authRepository.signOut() } }
+        viewModelScope.launch {
+            runCatching { push.unregister() }   // while the session is still valid
+            runCatching { authRepository.signOut() }
+        }
     }
 }

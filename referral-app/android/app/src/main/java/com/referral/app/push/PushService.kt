@@ -26,7 +26,7 @@ class PushService : FirebaseMessagingService() {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     override fun onNewToken(token: String) {
-        // Only stored if someone is signed in (the server function needs a session).
+        // Stored only if someone is signed in; otherwise it's sent at the next sign-in.
         scope.launch { registrar.sendToServer(token) }
     }
 
@@ -47,6 +47,7 @@ class PushService : FirebaseMessagingService() {
         )
         val notification = NotificationCompat.Builder(this, PushRegistrar.CHANNEL_ID)
             .setSmallIcon(com.referral.app.R.drawable.ic_notification)
+            .setColor(0xFF0F766E.toInt())   // brand teal tint for the icon
             .setContentTitle(n.title)
             .setContentText(n.body)
             .setStyle(NotificationCompat.BigTextStyle().bigText(n.body))

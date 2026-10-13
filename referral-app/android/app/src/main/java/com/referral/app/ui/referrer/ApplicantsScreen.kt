@@ -1,7 +1,6 @@
 package com.referral.app.ui.referrer
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -12,22 +11,16 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.PrimaryScrollableTabRow
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -37,22 +30,31 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.referral.app.data.ReportReason
 import com.referral.app.data.model.Applicant
 import com.referral.app.data.model.applicationStatusLabel
+import com.referral.app.ui.common.AppCard
+import com.referral.app.ui.common.AppTopBar
+import com.referral.app.ui.common.Banner
 import com.referral.app.ui.common.ConfirmDialog
 import com.referral.app.ui.common.ConfirmRequest
+import com.referral.app.ui.common.EmptyState
+import com.referral.app.ui.common.LoadingBox
+import com.referral.app.ui.common.MatchBadge
+import com.referral.app.ui.common.Pill
+import com.referral.app.ui.common.PersonAvatar
 import com.referral.app.ui.common.ReportDialog
-import com.referral.app.data.ReportReason
-import androidx.compose.material3.AlertDialog
-import androidx.compose.foundation.text.selection.SelectionContainer
-import androidx.compose.ui.platform.LocalClipboardManager
-import androidx.compose.ui.text.AnnotatedString
+import com.referral.app.ui.common.SmallButton
+import com.referral.app.ui.common.StatusPill
+import com.referral.app.ui.common.Tone
+import com.referral.app.ui.theme.Space
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ApplicantsScreen(
     onBack: () -> Unit,
@@ -68,44 +70,54 @@ fun ApplicantsScreen(
     }
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(ui.jobTitle.ifBlank { "Applicants" }) },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") } },
-            )
-        },
+        topBar = { AppTopBar(ui.jobTitle.ifBlank { "Applicants" }, onBack = onBack, subtitle = "${ui.applicants.size} applicants") },
+        containerColor = MaterialTheme.colorScheme.background,
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding)) {
-            PrimaryScrollableTabRow(selectedTabIndex = ui.tab.ordinal, edgePadding = 16.dp) {
+            PrimaryScrollableTabRow(
+                selectedTabIndex = ui.tab.ordinal,
+                edgePadding = Space.screen,
+                containerColor = MaterialTheme.colorScheme.background,
+            ) {
                 ApplicantTab.entries.forEach { t ->
                     Tab(
                         selected = ui.tab == t,
                         onClick = { viewModel.selectTab(t) },
-                        text = { Text("${t.label} (${ui.count(t)})") },
+                        text = { Text("${t.label} · ${ui.count(t)}", style = MaterialTheme.typography.labelLarge) },
                     )
                 }
             }
             if (ui.loading) {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+                LoadingBox()
                 return@Column
             }
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+                contentPadding = PaddingValues(horizontal = Space.screen, vertical = Space.md),
+                verticalArrangement = Arrangement.spacedBy(Space.md),
             ) {
-                ui.error?.let { msg -> item { Text(msg, color = MaterialTheme.colorScheme.error) } }
-                ui.message?.let { msg -> item { Text(msg, color = MaterialTheme.colorScheme.primary) } }
+                ui.error?.let { msg -> item { Banner(msg, Tone.ERROR) } }
+                ui.message?.let { msg -> item { Banner(msg, Tone.SUCCESS) } }
+                if (ui.tab == ApplicantTab.IN_PROGRESS && ui.visible.isNotEmpty()) {
+                    item {
+                        Banner(
+                            "After you submit a referral in your company's portal, tap Mark referred. " +
+                                "Update the outcome later so seekers know where they stand.",
+                            Tone.INFO,
+                        )
+                    }
+                }
                 if (ui.visible.isEmpty()) {
                     item {
-                        Text(
-                            when (ui.tab) {
-                                ApplicantTab.TO_REVIEW -> "No one is waiting for review."
-                                ApplicantTab.IN_PROGRESS -> "No one in progress yet."
-                                ApplicantTab.DONE -> "No finished applications yet."
-                                ApplicantTab.WAITLIST -> "No one on the waitlist."
+                        EmptyState(
+                            icon = Icons.Filled.Person,
+                            title = when (ui.tab) {
+                                ApplicantTab.TO_REVIEW -> "All caught up"
+                                ApplicantTab.IN_PROGRESS -> "No one in progress yet"
+                                ApplicantTab.DONE -> "No finished applications yet"
+                                ApplicantTab.WAITLIST -> "No one on the waitlist"
                             },
-                            style = MaterialTheme.typography.bodyMedium,
+                            body = if (ui.tab == ApplicantTab.TO_REVIEW) "New applicants show up here, best match first." else null,
                         )
                     }
                 }
@@ -120,15 +132,6 @@ fun ApplicantsScreen(
                         onReport = { reporting = a },
                         onContact = { viewModel.showContact(a) },
                     )
-                }
-                if (ui.tab == ApplicantTab.IN_PROGRESS) {
-                    item {
-                        Text(
-                            "After you submit a referral in your company's portal, tap Mark referred. " +
-                                "Update the outcome later so seekers know where they stand.",
-                            style = MaterialTheme.typography.bodySmall,
-                        )
-                    }
                 }
             }
         }
@@ -196,48 +199,53 @@ private fun ApplicantCard(
     val p = applicant.profile
     var showAnswers by rememberSaveable(applicant.id) { mutableStateOf(false) }
 
-    Card(Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(p?.fullName ?: "Applicant", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
-                applicant.matchScore?.let {
-                    Text("$it% match", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+    AppCard {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.md)) {
+            PersonAvatar(p?.fullName, size = 44.dp,
+                container = MaterialTheme.colorScheme.secondaryContainer, content = MaterialTheme.colorScheme.onSecondaryContainer)
+            Column(Modifier.weight(1f)) {
+                Text(p?.fullName ?: "Applicant", style = MaterialTheme.typography.titleMedium)
+                Text(
+                    listOfNotNull(p?.experienceYears?.let { "$it yrs" }, p?.city).joinToString(" · "),
+                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            applicant.matchScore?.let { MatchBadge(it) }
+        }
+        StatusPill(applicant.status, applicationStatusLabel(applicant.status))
+        if (!p?.skills.isNullOrEmpty()) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                p!!.skills.take(8).forEach {
+                    Pill(it, MaterialTheme.colorScheme.surfaceVariant, MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
-            Text(
-                listOfNotNull(p?.experienceYears?.let { "$it yrs" }, p?.city).joinToString(" · "),
-                style = MaterialTheme.typography.bodyMedium,
-            )
-            if (!p?.skills.isNullOrEmpty()) {
-                Text(p!!.skills.joinToString(", "), style = MaterialTheme.typography.bodySmall)
-            }
-            Text(applicationStatusLabel(applicant.status), style = MaterialTheme.typography.labelMedium)
+        }
 
-            if (applicant.answers.isNotEmpty()) {
-                TextButton(onClick = { showAnswers = !showAnswers }) {
-                    Text(if (showAnswers) "Hide answers" else "Show answers (${applicant.answers.size})")
-                }
-                if (showAnswers) {
-                    applicant.answers.forEachIndexed { i, ans ->
-                        Text(questions.getOrNull(i) ?: "Question ${i + 1}", style = MaterialTheme.typography.labelLarge)
+        if (applicant.answers.isNotEmpty()) {
+            SmallButton(if (showAnswers) "Hide answers" else "Show answers (${applicant.answers.size})", { showAnswers = !showAnswers })
+            if (showAnswers) {
+                applicant.answers.forEachIndexed { i, ans ->
+                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Text(questions.getOrNull(i) ?: "Question ${i + 1}", style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant)
                         Text(ans, style = MaterialTheme.typography.bodyMedium)
                     }
                 }
             }
+        }
 
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {   // wraps on narrow phones
-                OutlinedButton(onClick = onResume, enabled = !busy) { Text("Resume") }
-                if (applicant.status in CONTACT_STATUSES) {
-                    OutlinedButton(onClick = onContact, enabled = !busy) { Text("Contact") }
-                }
-                applicant.nextSteps.forEachIndexed { i, (status, label) ->
-                    if (i == 0) Button(onClick = { onStep(status) }, enabled = !busy) { Text(label) }
-                    else TextButton(onClick = { onStep(status) }, enabled = !busy) { Text(label) }
-                }
-                if (applicant.seekerId != null) {
-                    TextButton(onClick = onReport, enabled = !busy) { Text("Report", color = MaterialTheme.colorScheme.error) }
-                }
+        FlowRow(   // wraps on narrow phones
+            horizontalArrangement = Arrangement.spacedBy(Space.xs),
+            verticalArrangement = Arrangement.spacedBy(Space.xs),
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            applicant.nextSteps.forEachIndexed { i, (status, label) ->
+                SmallButton(label, { onStep(status) }, enabled = !busy, filled = i == 0,
+                    destructive = status == "declined" || status == "not_selected")
             }
+            SmallButton("Resume", onResume, enabled = !busy)
+            if (applicant.status in CONTACT_STATUSES) SmallButton("Contact", onContact, enabled = !busy)
+            if (applicant.seekerId != null) SmallButton("Report", onReport, enabled = !busy, destructive = true)
         }
     }
 }

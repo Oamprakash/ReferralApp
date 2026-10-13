@@ -4,7 +4,7 @@ import android.content.Context
 import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
-import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import java.security.MessageDigest
 import java.util.UUID
@@ -23,13 +23,13 @@ data class Nonce(val raw: String, val hashed: String) {
 }
 
 /**
- * Shows the Google account picker and returns an ID token.
- * [activityContext] must be an Activity context; the picker is a UI flow.
+ * Shows Google's full account chooser and returns an ID token.
+ * Uses the "Sign in with Google" button flow, not the One Tap sheet: it always opens, lists every account
+ * on the phone, offers "Add account", and isn't hidden for a while after the user dismisses it.
+ * [activityContext] must be an Activity context; the chooser is a UI flow.
  */
 suspend fun requestGoogleIdToken(activityContext: Context, webClientId: String, hashedNonce: String): String {
-    val option = GetGoogleIdOption.Builder()
-        .setFilterByAuthorizedAccounts(false)
-        .setServerClientId(webClientId)
+    val option = GetSignInWithGoogleOption.Builder(webClientId)
         .setNonce(hashedNonce)
         .build()
     val request = GetCredentialRequest.Builder().addCredentialOption(option).build()
@@ -43,4 +43,12 @@ suspend fun requestGoogleIdToken(activityContext: Context, webClientId: String, 
         return GoogleIdTokenCredential.createFrom(credential.data).idToken
     }
     error("Unexpected credential type: ${credential.type}")
+}
+
+/** Plain-language message for a failed account chooser (before anything reaches Supabase). */
+fun googleErrorText(e: Throwable): String = when (e) {
+    is androidx.credentials.exceptions.GetCredentialCancellationException -> "Google sign-in was cancelled."
+    is androidx.credentials.exceptions.NoCredentialException ->
+        "No Google account found on this phone. Add one in Settings → Accounts, or sign in with your mobile number."
+    else -> "Google sign-in didn't work on this phone. Try your mobile number instead.\n${e.message.orEmpty().take(120)}"
 }

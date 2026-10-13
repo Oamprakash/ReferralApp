@@ -46,6 +46,9 @@ data class ProfileUiState(
     val exporting: Boolean = false,
     val deleting: Boolean = false,
     val privacyMessage: String? = null,
+    val isAdmin: Boolean = false,
+    /** Shown after saving when the screen stays open (Profile tab). */
+    val savedNote: String? = null,
 ) {
     val experienceYears get() = experienceText.toIntOrNull()
     val emailProblem: String?
@@ -89,6 +92,7 @@ class ProfileViewModel @Inject constructor(
                         )
                     }
                     cityWasSaved = p?.city != null
+                    runCatching { safety.amIAdmin() }.onSuccess { a -> _ui.update { it.copy(isAdmin = a) } }
                     runCatching { profiles.myContact() }.onSuccess { c ->
                         _ui.update {
                             it.copy(contactEmail = c?.email.orEmpty(), contactPhone = c?.phone?.removePrefix("+91").orEmpty())
@@ -99,10 +103,10 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
-    fun onName(v: String) = _ui.update { it.copy(fullName = v.take(80)) }
-    fun onCity(v: String) = _ui.update { it.copy(city = v.take(40)) }
-    fun onSkills(v: String) = _ui.update { it.copy(skillsText = v.take(300)) }
-    fun onExperience(v: String) = _ui.update { it.copy(experienceText = v.filter(Char::isDigit).take(2)) }
+    fun onName(v: String) = _ui.update { it.copy(fullName = v.take(80), savedNote = null) }
+    fun onCity(v: String) = _ui.update { it.copy(city = v.take(40), savedNote = null) }
+    fun onSkills(v: String) = _ui.update { it.copy(skillsText = v.take(300), savedNote = null) }
+    fun onExperience(v: String) = _ui.update { it.copy(experienceText = v.filter(Char::isDigit).take(2), savedNote = null) }
     fun onContactEmail(v: String) = _ui.update { it.copy(contactEmail = v.trim().take(254)) }
     fun onContactPhone(v: String) = _ui.update { it.copy(contactPhone = v.filter(Char::isDigit).takeLast(12).let { d ->
         if (d.length > 10 && d.startsWith("91")) d.drop(2) else d.take(10) }) }
@@ -170,7 +174,7 @@ class ProfileViewModel @Inject constructor(
         val s = _ui.value
         if (!s.canSave) return
         viewModelScope.launch {
-            _ui.update { it.copy(saving = true, error = null) }
+            _ui.update { it.copy(saving = true, error = null, savedNote = null) }
             runCatching {
                 profiles.updateProfile(
                     ProfileUpdate(
@@ -185,7 +189,7 @@ class ProfileViewModel @Inject constructor(
                     phone = s.contactPhone.ifBlank { null }?.let { "+91$it" },
                 )
             }.onSuccess {
-                _ui.update { it.copy(saving = false, saved = true) }
+                _ui.update { it.copy(saving = false, saved = true, savedNote = "Profile saved.") }
             }.onFailure {
                 _ui.update { it.copy(saving = false, error = "Couldn't save. Try again.") }
             }
