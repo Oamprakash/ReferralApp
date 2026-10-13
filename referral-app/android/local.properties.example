@@ -1,0 +1,6 @@
+# Copy the keys below into android/local.properties (Android Studio creates that file with sdk.dir).
+# local.properties is git-ignored; never commit these values.
+SUPABASE_URL=https://YOUR-PROJECT-REF.supabase.co
+SUPABASE_ANON_KEY=your-anon-public-key
+# The *Web application* OAuth client ID from Google Cloud (not the Android client ID)
+GOOGLE_WEB_CLIENT_ID=1234567890-xxxxxxxx.apps.googleusercontent.com
