@@ -1,5 +1,8 @@
 # Referral Jobs App — Sprints 1–4
 
+> **Releasing?** Follow [RELEASE.md](RELEASE.md): signing, Supabase production settings, privacy pages, Play Console.
+
+
 Every job is posted by a verified employee and re-confirmed open every 14 days. This repo holds the Supabase backend and the Android app.
 
 ## What's in Sprint 1
