@@ -72,7 +72,7 @@ set role authenticated;
 select set_config('request.jwt.claim.sub', :S1, false) is not null as as_s1;
 select withdraw_application(id)->>'status' from applications where seeker_id = :S1 and job_id = :J;
 
-\echo '--- A10 seekers cannot set status directly (expect UPDATE 0 / permission denied)'
+\echo '--- A10 seekers cannot set status or delete (expect UPDATE 0; permission denied for the delete)'
 update applications set status = 'withdrawn' where seeker_id = :S1 and job_id = :J2;
 delete from applications where seeker_id = :S1;
 select status as still_applied from applications where seeker_id = :S1 and job_id = :J2;
