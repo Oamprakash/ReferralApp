@@ -3,6 +3,7 @@ package com.referral.app.ui.navigation
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.referral.app.data.AuthRepository
+import com.referral.app.data.OnboardingPrefs
 import com.referral.app.data.ProfileRepository
 import com.referral.app.push.PushRegistrar
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -27,10 +28,20 @@ class RootViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val profileRepository: ProfileRepository,
     private val push: PushRegistrar,
+    private val onboarding: OnboardingPrefs,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow<RootState>(RootState.Loading)
     val state: StateFlow<RootState> = _state.asStateFlow()
+
+    /** First launch on this phone: show the welcome tour before sign-in. */
+    private val _showTour = MutableStateFlow(!onboarding.seen)
+    val showTour: StateFlow<Boolean> = _showTour.asStateFlow()
+
+    fun finishTour() {
+        onboarding.markSeen()
+        _showTour.value = false
+    }
 
     init {
         viewModelScope.launch {

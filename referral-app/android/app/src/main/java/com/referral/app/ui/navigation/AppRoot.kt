@@ -41,6 +41,7 @@ import com.referral.app.ui.admin.AdminScreen
 import com.referral.app.ui.auth.SignInScreen
 import com.referral.app.ui.auth.SuspendedScreen
 import com.referral.app.ui.home.HomeScreen
+import com.referral.app.ui.onboarding.OnboardingScreen
 import com.referral.app.ui.matches.MatchesScreen
 import com.referral.app.ui.profile.ProfileScreen
 import com.referral.app.ui.referrer.ApplicantsScreen
@@ -64,14 +65,16 @@ import kotlinx.serialization.Serializable
 @Serializable data class ApplicantsRoute(val jobId: String)
 @Serializable data object AdminRoute
 @Serializable data object MatchesRoute
+@Serializable data object HowItWorksRoute
 
 @Composable
 fun AppRoot(viewModel: RootViewModel = hiltViewModel()) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val showTour by viewModel.showTour.collectAsStateWithLifecycle()
 
     when (val s = state) {
         RootState.Loading -> LoadingBox()
-        RootState.SignedOut -> SignInScreen()
+        RootState.SignedOut -> if (showTour) OnboardingScreen(onDone = viewModel::finishTour) else SignInScreen()
         is RootState.SignedIn -> SignedInGraph(startAtProfile = s.needsProfile, onSignOut = viewModel::signOut)
         is RootState.Suspended -> SuspendedScreen(reason = s.reason, onSignOut = viewModel::signOut)
     }
@@ -153,6 +156,7 @@ private fun SignedInGraph(startAtProfile: Boolean, onSignOut: () -> Unit) {
                         }
                     },
                     onAdmin = { nav.navigate(AdminRoute) },
+                    onHowItWorks = { nav.navigate(HowItWorksRoute) },
                     onSignOut = onSignOut,
                 )
             }
@@ -214,6 +218,9 @@ private fun SignedInGraph(startAtProfile: Boolean, onSignOut: () -> Unit) {
             }
             composable<ApplicantsRoute> {
                 ApplicantsScreen(onBack = { nav.popBackStack() })
+            }
+            composable<HowItWorksRoute> {
+                OnboardingScreen(onDone = { nav.popBackStack() }, replay = true)
             }
             composable<AdminRoute> {
                 AdminScreen(onBack = { nav.popBackStack() })

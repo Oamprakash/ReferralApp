@@ -27,6 +27,7 @@ import androidx.compose.material.icons.filled.AccountBox
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
@@ -78,6 +79,7 @@ fun ProfileScreen(
     isTab: Boolean = false,
     onBack: (() -> Unit)? = null,
     onAdmin: () -> Unit = {},
+    onHowItWorks: () -> Unit = {},
     onSignOut: () -> Unit = {},
     viewModel: ProfileViewModel = hiltViewModel(),
 ) {
@@ -193,6 +195,8 @@ fun ProfileScreen(
             }
             if (isTab) {
                 AppCard(contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = Space.sm)) {
+                    MenuRow(Icons.Filled.Info, "How the app works", "Tips for seekers and referrers", onClick = onHowItWorks)
+                    HorizontalDivider(color = MaterialTheme.extra.cardBorder)
                     if (ui.isAdmin) {
                         MenuRow(Icons.Filled.Build, "Admin", "Reports and company requests", onClick = onAdmin)
                         HorizontalDivider(color = MaterialTheme.extra.cardBorder)
