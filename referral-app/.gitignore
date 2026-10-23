@@ -9,6 +9,7 @@ android/.idea/
 *.aab
 *.keystore
 *.jks
+android/keystore.properties
 
 # Supabase CLI
 supabase/.branches/

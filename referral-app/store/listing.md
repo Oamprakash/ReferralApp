@@ -35,7 +35,7 @@ Starting with IT companies in Chennai, and growing city by city.
 **Category:** Business (or Productivity)
 **Tags to pick in Play Console:** Job search, Careers
 **Contact email:** required: use a support address, not your work one.
-**Privacy policy URL:** required before review.
+**Privacy policy URL:** `https://oamprakash.github.io/ReferralApp/privacy.html` once GitHub Pages is on (RELEASE.md, step 6).
 
 ## Graphics (in store/play/)
 - feature_graphic.png: 1024×500

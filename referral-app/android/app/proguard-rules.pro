@@ -14,3 +14,15 @@
 -dontwarn com.gemalto.jp2.**
 -keep class com.tom_roush.pdfbox.** { *; }
 -keep class com.tom_roush.fontbox.** { *; }
+
+# kotlinx.serialization for library models too (supabase-kt, navigation routes). Harmless if duplicated.
+-keepclassmembers @kotlinx.serialization.Serializable class ** {
+    *** Companion;
+    kotlinx.serialization.KSerializer serializer(...);
+}
+-keep,includedescriptorclasses class **$$serializer { *; }
+-dontwarn java.lang.management.**
+
+# Credential Manager (Google sign-in): the Play services provider is found by reflection.
+-if class androidx.credentials.CredentialManager
+-keep class androidx.credentials.playservices.** { *; }
