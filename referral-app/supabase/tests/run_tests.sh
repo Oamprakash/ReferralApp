@@ -9,6 +9,7 @@
 #   4d. trust_safety_tests.sql  Sprint 5 maintenance, reports, moderation, bans, admin, export
 #   4e. resume_match_tests.sql  contact privacy, applicant_contact after shortlist, best_matches, export
 #   4f. job_description_tests.sql  description tidy-up, length limit, job detail
+#   4g. grants_tests.sql       every public table has explicit grants (no Supabase defaults)
 #   5. otp_functions.test.ts   Edge Function handlers against the real SQL (pass/fail; needs Node 22.18+)
 #   6. push.test.ts            send-push logic: FCM auth, sending, dead-token cleanup (pass/fail)
 #   7. account.test.ts         delete-account against the real schema: every cascade checked (pass/fail)
@@ -68,6 +69,10 @@ psql "$PGURL/referral_test_match" -qf resume_match_tests.sql || true
 echo; echo "=== 4f. Job description tests"
 fresh_db referral_test_desc
 psql "$PGURL/referral_test_desc" -qf job_description_tests.sql || true
+
+echo; echo "=== 4g. Grant tests"
+fresh_db referral_test_grants
+psql "$PGURL/referral_test_grants" -qf grants_tests.sql || true
 
 echo; echo "=== 5. Edge Function handler tests"
 fresh_db referral_test_otp

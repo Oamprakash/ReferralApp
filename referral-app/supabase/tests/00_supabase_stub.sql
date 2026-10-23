@@ -2,7 +2,8 @@
 -- Run once per fresh database (roles anon/authenticated/service_role must exist; see run_tests.sh).
 create extension if not exists pgcrypto;
 grant usage on schema public to anon, authenticated, service_role;
-alter default privileges in schema public grant all on tables to anon, authenticated, service_role;
+-- No default table grants: from 30 Oct 2026 Supabase stops auto-granting new public tables,
+-- so every table must be granted explicitly in its migration (see 20261021000000_explicit_table_grants.sql).
 alter default privileges in schema public grant all on functions to anon, authenticated, service_role;
 create schema auth;
 grant usage on schema auth to anon, authenticated, service_role;
