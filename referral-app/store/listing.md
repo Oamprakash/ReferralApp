@@ -1,6 +1,6 @@
 # Play Store listing (draft)
 
-**App name** (max 30): ReferralApp. Placeholder: pick the real name before you publish.
+**App name** (max 30): Referral App
 
 **Short description** (max 80):
 Get referred to IT jobs by verified employees who actually work there.
