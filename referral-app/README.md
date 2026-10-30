@@ -12,7 +12,7 @@ Every job is posted by a verified employee and re-confirmed open every 14 days. 
 | Database | All MVP tables (`profiles`, `companies`, `referrer_verifications`, `jobs`, `applications`, `reports`), enums, triggers |
 | Rules in the database | Max 5 active posts per referrer · max 10 applications per seeker per week · applicant cap with automatic waitlist · official link or job ID required · expired verification can't keep posts active |
 | Security | Row-level security on every table · private `resumes` bucket · referrers can read only their own applicants' profiles and resumes · seekers can't change their application status · `priority_until` is system-only |
-| Android | Compose + Hilt + type-safe navigation · Supabase client · phone OTP (+91) and Google sign-in · profile form · PDF resume upload |
+| Android | Compose + Hilt + type-safe navigation · Supabase client · Google sign-in · profile form · PDF resume upload |
 
 `profiles` is the spec's `users` table, renamed so it doesn't clash with Supabase's `auth.users`. Phone and email stay in `auth.users`, so referrers never see them through `profiles`.
 
@@ -34,7 +34,7 @@ android/
     di/SupabaseModule.kt               Supabase client (Auth, Postgrest, Storage)
     data/                              AuthRepository, ProfileRepository, models
     ui/navigation/                     RootViewModel decides sign-in / profile / home
-    ui/auth/                           phone OTP + Google (Credential Manager, nonce)
+    ui/auth/                           Google sign-in (Credential Manager, nonce)
     ui/profile/                        profile form + resume picker/upload
     ui/home/                           placeholder until the Sprint 3 feed
 ```
@@ -190,7 +190,7 @@ Then `supabase db push` to apply `migrations/20261013000000_push_trigger.sql`. I
 **6. Check it.** Rebuild and run the app, sign in and allow notifications. A row for your account should appear in `device_tokens`. Then in the SQL Editor:
 ```sql
 insert into notifications (user_id, kind, title, body)
-select id, 'test', 'Test push', 'If you can read this, push works.' from auth.users where phone = '91XXXXXXXXXX';
+select id, 'test', 'Test push', 'If you can read this, push works.' from auth.users where email = 'you@gmail.com';
 ```
 If nothing arrives, open Edge Functions → send-push → Logs. `sent_at` is filled in on the row once FCM accepts it.
 
@@ -218,9 +218,9 @@ The notification icon is `res/drawable/ic_notification.xml`, a white silhouette 
    select cron.schedule('daily-maintenance', '30 21 * * *', $$select public.run_daily_maintenance()$$);
    ```
    `30 21 * * *` is 21:30 UTC, which is 03:00 IST. To run it once now and see what it did: `select public.run_daily_maintenance();` (it returns counts). Past runs: `select * from cron.job_run_details order by start_time desc limit 5;`
-4. Make yourself an admin (use your own sign-in phone, digits only, with 91; or match on `email` if you signed in with Google):
+4. Make yourself an admin (the Google account you sign in with):
    ```sql
-   insert into admins (user_id) select id from auth.users where phone = '91XXXXXXXXXX';
+   insert into admins (user_id) select id from auth.users where email = 'you@gmail.com';
    ```
    Restart the app; "Admin" appears in the menu. To unsuspend someone: `select admin_unban_user('<user id>');` while signed in as admin, or in the SQL Editor `update profiles set banned_at = null, ban_reason = null where id = '<user id>';`.
 
@@ -298,4 +298,10 @@ grant all on public.new_table to service_role;
 ```
 
 The local test stub has no default grants either, so a table without explicit grants fails the tests. Suite 4g lists any table that service_role can't use or that anon can reach.
+
+## Sign-in: Google only
+
+Phone (SMS code) sign-in was removed; everyone signs in with Google. In the Supabase dashboard turn **Authentication → Sign In / Providers → Phone** off so the API can't be used to create phone accounts either. Accounts made earlier with a phone number can't sign in any more. Delete them in Authentication → Users if they were only tests.
+
+Work-email verification for employees still uses an emailed code; that's unchanged.
 

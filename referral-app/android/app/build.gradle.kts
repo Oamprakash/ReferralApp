@@ -58,6 +58,15 @@ android {
         }
     }
 
+    // Google is the only sign-in, so a release built without the client ID would let no one in: stop the build.
+    gradle.taskGraph.whenReady {
+        val releasing = allTasks.any { it.project == project && it.name.contains("Release") }
+        val signed = keystoreProps.getProperty("storeFile") != null   // real uploads only; CI's unsigned check build skips this
+        if (releasing && signed && localProps.getProperty("GOOGLE_WEB_CLIENT_ID").isNullOrBlank()) {
+            throw GradleException("GOOGLE_WEB_CLIENT_ID is missing from android/local.properties (use the Web client ID).")
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true
