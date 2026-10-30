@@ -76,7 +76,7 @@ For every later upload, bump `versionCode` in `app/build.gradle.kts` (2, 3, …)
 
 ## 6. Host the privacy policy and account-deletion pages
 
-The pages are in `docs/` at the repo root. Replace `support@example.com` with your support address (and the name, if it changed), then enable GitHub Pages:
+The pages are in `docs/` at the repo root. The support address on them is `oamprakash+warmintro@gmail.com`. To change it, edit both pages. GitHub Pages:
 
 GitHub repo → **Settings → Pages** → Source: *Deploy from a branch* → Branch: `main`, folder `/docs` → Save.
 
