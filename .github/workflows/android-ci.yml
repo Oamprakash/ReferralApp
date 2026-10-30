@@ -1,0 +1,39 @@
+# Build check for every pull request and push to main: compiles the debug app and runs unit tests.
+# Needs no secrets (Firebase is skipped without google-services.json; Supabase values are blank).
+name: Android build
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: referral-app/android
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Build debug and run unit tests
+        run: ./gradlew --no-daemon assembleDebug testDebugUnitTest
+
+      - name: Upload test report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-report
+          path: referral-app/android/app/build/reports/tests/
