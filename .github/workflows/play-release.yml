@@ -47,14 +47,14 @@ jobs:
       run:
         working-directory: referral-app/android
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: 17
 
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v5
 
       - name: Work out version
         id: version
@@ -106,7 +106,7 @@ jobs:
           -PversionName=${{ steps.version.outputs.name }}
 
       - name: Keep the bundle and R8 mapping
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: release-${{ steps.version.outputs.name }}-${{ steps.version.outputs.code }}
           path: |
