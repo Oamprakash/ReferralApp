@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -40,6 +41,7 @@ import com.referral.app.ui.common.Tone
 import com.referral.app.ui.theme.Space
 import com.referral.app.ui.theme.extra
 
+@OptIn(ExperimentalMaterial3Api::class)   // PullToRefreshBox / scrollable tab row
 @Composable
 fun MatchesScreen(
     onOpenJob: (String) -> Unit,

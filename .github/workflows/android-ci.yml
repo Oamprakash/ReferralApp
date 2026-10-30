@@ -1,0 +1,46 @@
+# Build check for every pull request and push to main: compiles the debug app, runs unit tests,
+# and builds the R8-shrunk release bundle (unsigned here) so missing keep rules fail early.
+# Needs no secrets (Firebase is skipped without google-services.json; Supabase values are blank).
+name: Android build
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: referral-app/android
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@v5
+
+      - name: Build debug and run unit tests
+        run: |
+          set -o pipefail
+          ./gradlew --no-daemon --console=plain assembleDebug testDebugUnitTest bundleRelease 2>&1 | tee "$RUNNER_TEMP/build.log"
+
+      # Turn compiler/Gradle errors into annotations so they show on the PR (and via the API) without opening logs.
+      - name: Report build errors
+        if: failure()
+        run: |
+          # Kotlin errors ("e: file:line message"), then Gradle's "What went wrong" block. GitHub keeps 10 per step.
+          { grep -E "^e: " "$RUNNER_TEMP/build.log" || true
+            awk '/^\* What went wrong/{f=1;next} /^\* Try/{f=0} f && NF' "$RUNNER_TEMP/build.log"
+          } | head -10 | while IFS= read -r line; do
+            echo "::error title=Build::$line"
+          done

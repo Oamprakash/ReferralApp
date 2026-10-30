@@ -37,9 +37,10 @@ android {
         applicationId = "com.referral.app"
         minSdk = 26
         targetSdk = 36
-        // Bump versionCode by 1 for every upload to Play; versionName is what users see.
-        versionCode = 1
-        versionName = "1.0.0"
+        // Local builds: 1 / 1.0.0. The release workflow passes -PversionCode / -PversionName
+        // (versionCode = run number + 10, versionName from the git tag), so uploads always increase.
+        versionCode = (project.findProperty("versionCode") as String?)?.toInt() ?: 1
+        versionName = (project.findProperty("versionName") as String?) ?: "1.0.0"
 
         buildConfigField("String", "SUPABASE_URL", secret("SUPABASE_URL"))
         buildConfigField("String", "SUPABASE_ANON_KEY", secret("SUPABASE_ANON_KEY"))
