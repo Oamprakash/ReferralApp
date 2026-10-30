@@ -1,4 +1,5 @@
-# Build check for every pull request and push to main: compiles the debug app and runs unit tests.
+# Build check for every pull request and push to main: compiles the debug app, runs unit tests,
+# and builds the R8-shrunk release bundle (unsigned here) so missing keep rules fail early.
 # Needs no secrets (Firebase is skipped without google-services.json; Supabase values are blank).
 name: Android build
 
@@ -31,7 +32,7 @@ jobs:
       - name: Build debug and run unit tests
         run: |
           set -o pipefail
-          ./gradlew --no-daemon --console=plain assembleDebug testDebugUnitTest 2>&1 | tee "$RUNNER_TEMP/build.log"
+          ./gradlew --no-daemon --console=plain assembleDebug testDebugUnitTest bundleRelease 2>&1 | tee "$RUNNER_TEMP/build.log"
 
       # Turn compiler/Gradle errors into annotations so they show on the PR (and via the API) without opening logs.
       - name: Report build errors
