@@ -25,6 +25,7 @@ import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilterChip
@@ -67,6 +68,7 @@ import com.referral.app.ui.theme.Space
 import com.referral.app.ui.theme.extra
 import java.time.LocalTime
 
+@OptIn(ExperimentalMaterial3Api::class)   // PullToRefreshBox / scrollable tab row
 @Composable
 fun HomeScreen(
     onOpenJob: (String) -> Unit,

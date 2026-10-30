@@ -14,6 +14,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PrimaryScrollableTabRow
@@ -55,6 +56,7 @@ import com.referral.app.ui.common.StatusPill
 import com.referral.app.ui.common.Tone
 import com.referral.app.ui.theme.Space
 
+@OptIn(ExperimentalMaterial3Api::class)   // PullToRefreshBox / scrollable tab row
 @Composable
 fun ApplicantsScreen(
     onBack: () -> Unit,
