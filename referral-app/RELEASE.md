@@ -125,6 +125,57 @@ New personal developer accounts must run a **closed test with at least 12 tester
 2. Share the group link and the opt-in link (the Reddit post drafts are earlier in our chat).
 3. After 14 days with 12+ opted-in testers, Dashboard → **Apply for production**, then roll out.
 
+## 9. Automated releases from GitHub
+
+After the **first bundle is uploaded by hand** (step 8: Google requires that before any API upload), every later release can come from GitHub:
+
+- **Push a tag** such as `v1.0.1` → builds a signed bundle and rolls it out to the **closed testing** track.
+- **Actions → Play release → Run workflow** → choose the track (`internal`, `alpha`, `beta`, `production`) and `completed` (roll out) or `draft` (you press the button in Play Console).
+
+The workflow sets `versionCode` to the run number + 10, so it always goes up, and `versionName` from the tag. The R8 mapping file is uploaded too, so crash reports in Play Console are readable. A separate **Android build** workflow compiles the app and runs the unit tests on every pull request.
+
+### One-time setup: GitHub secrets
+
+GitHub repo → **Settings → Secrets and variables → Actions → New repository secret**. Base64 values come from PowerShell:
+
+```powershell
+[Convert]::ToBase64String([IO.File]::ReadAllBytes("$env:USERPROFILE\keys\referral-upload.jks")) | Set-Clipboard
+```
+
+| Secret | Value |
+|---|---|
+| `UPLOAD_KEYSTORE_BASE64` | your `.jks` as base64 (command above) |
+| `UPLOAD_KEYSTORE_PASSWORD` | keystore password |
+| `UPLOAD_KEY_ALIAS` | `upload` |
+| `UPLOAD_KEY_PASSWORD` | key password |
+| `SUPABASE_URL` | same as in `local.properties` |
+| `SUPABASE_ANON_KEY` | same as in `local.properties` |
+| `GOOGLE_WEB_CLIENT_ID` | same as in `local.properties` |
+| `GOOGLE_SERVICES_JSON_BASE64` | `android\app\google-services.json` as base64 (same command, other path) |
+| `PLAY_SERVICE_ACCOUNT_JSON` | the whole JSON key file from the next section, pasted as is |
+
+Secrets are encrypted by GitHub, aren't shown in logs, and aren't available to pull requests from forks.
+
+### One-time setup: Play service account
+
+This lets the workflow upload, and nothing else.
+
+1. **Google Cloud** (the same project as Firebase) → **APIs & Services → Library** → enable **Google Play Android Developer API**.
+2. **IAM & Admin → Service accounts → Create service account**, e.g. `play-release`. Skip the optional role steps.
+3. Open it → **Keys → Add key → JSON**. A file downloads; that's `PLAY_SERVICE_ACCOUNT_JSON`. Keep it private and delete the download once it's in GitHub.
+4. **Play Console → Users and permissions → Invite new users** → paste the service account's email (`…@….iam.gserviceaccount.com`) → **App permissions** → add the app with **Release to testing tracks** (and **Release to production** when you're ready) → **Invite user**.
+
+It can take up to a day before a new service account is allowed to upload. If the first run fails with "The caller does not have permission", wait and run it again.
+
+### Releasing
+
+```powershell
+git tag v1.0.1
+git push origin v1.0.1
+```
+
+Then watch **Actions → Play release**. When it's green, the build is on the closed testing track. For production, run the workflow by hand with `production` and `draft`, check the release in Play Console, and press **Start rollout**.
+
 ## Already handled in the code
 
 - Targets **API 36** (required for new apps since 31 Aug 2026); edge-to-edge and predictive back are compatible.
