@@ -37,13 +37,9 @@ jobs:
       - name: Report build errors
         if: failure()
         run: |
-          grep -E "^e: |^\* What went wrong|^> |error:|FAILED" "$RUNNER_TEMP/build.log" | head -40 | while IFS= read -r line; do
-            echo "::error title=Build::${line//$'\n'/ }"
+          # Kotlin errors ("e: file:line message"), then Gradle's "What went wrong" block. GitHub keeps 10 per step.
+          { grep -E "^e: " "$RUNNER_TEMP/build.log" || true
+            awk '/^\* What went wrong/{f=1;next} /^\* Try/{f=0} f && NF' "$RUNNER_TEMP/build.log"
+          } | head -10 | while IFS= read -r line; do
+            echo "::error title=Build::$line"
           done
-
-      - name: Upload test report on failure
-        if: failure()
-        uses: actions/upload-artifact@v5
-        with:
-          name: test-report
-          path: referral-app/android/app/build/reports/tests/
