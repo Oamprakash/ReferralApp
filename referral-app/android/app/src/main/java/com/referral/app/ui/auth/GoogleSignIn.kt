@@ -49,6 +49,6 @@ suspend fun requestGoogleIdToken(activityContext: Context, webClientId: String, 
 fun googleErrorText(e: Throwable): String = when (e) {
     is androidx.credentials.exceptions.GetCredentialCancellationException -> "Google sign-in was cancelled."
     is androidx.credentials.exceptions.NoCredentialException ->
-        "No Google account found on this phone. Add one in Settings → Accounts, or sign in with your mobile number."
-    else -> "Google sign-in didn't work on this phone. Try your mobile number instead.\n${e.message.orEmpty().take(120)}"
+        "No Google account found on this phone. Add one in Settings → Accounts, then try again."
+    else -> "Google sign-in didn't work. Check your connection and that Google Play services is up to date.\n${e.message.orEmpty().take(120)}"
 }

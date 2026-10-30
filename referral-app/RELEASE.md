@@ -39,7 +39,7 @@ adb install -r app\build\outputs\apk\release\app-release.apk
 
 Run through the main flows:
 
-- [ ] Sign in with phone, and with Google. Google needs your **upload key SHA-1** added as an Android OAuth client first; get it with `keytool -list -v -keystore "$env:USERPROFILE\keys\referral-upload.jks" -alias upload`.
+- [ ] Sign in with Google. It needs your **upload key SHA-1** added as an Android OAuth client first; get it with `keytool -list -v -keystore "$env:USERPROFILE\keys\referral-upload.jks" -alias upload`.
 - [ ] Feed loads, filters work, a job opens.
 - [ ] Upload a resume: the profile fills in, and Best matches load.
 - [ ] Apply to a job.
@@ -62,8 +62,8 @@ For every later upload, bump `versionCode` in `app/build.gradle.kts` (2, 3, …)
 
 - [ ] **Migrations:** `supabase db push` from `referral-app` (includes the explicit table grants).
 - [ ] **Work-email codes:** set `RESEND_API_KEY` and `EMAIL_FROM`, then `supabase secrets unset OTP_DEV_MODE` and redeploy both OTP functions. **Never ship with dev mode on.** Anyone could verify any work email. (README → "Going live with real email".)
-- [ ] **Phone sign-in SMS:** Authentication → Sign In / Providers → Phone. Configure a real SMS provider. Twilio Verify is the simplest for Indian numbers; ordinary SMS to India requires DLT-registered templates.
-- [ ] **Reviewer test number:** in the same Phone settings, add a test number with a fixed code (e.g. `919000000000=123456`). Play reviewers use it to sign in without a real SMS (step 6).
+- [ ] **Sign-in is Google only:** Authentication → Sign In / Providers → **Phone: off**, **Google: on** (Web client ID and secret).
+- [ ] **Reviewer account:** create a dedicated Gmail for Play review (e.g. `referralapp.review@gmail.com`) with **2-Step Verification off**, so reviewers can sign in on their device. Sign in with it once, finish the profile, and verify it as a referrer if you want reviewers to see posting too (step 7).
 - [ ] **Remove the fictional data:** run `supabase/seed/remove_seed_data.sql` in the SQL Editor. Keep the company allowlist.
 - [ ] **Daily maintenance cron** is scheduled (`select * from cron.job;`), and you're in `admins`.
 - [ ] **Push:** the `send-push` function and the Vault secrets are set (they already work in your project).
@@ -92,7 +92,7 @@ Create the app (free, *App*, not a game), then fill in **Dashboard → Set up yo
 | Section | Answer |
 |---|---|
 | Privacy policy | the `privacy.html` URL |
-| App access | *Some functionality is restricted* → add instructions: "Sign in with mobile number 9000000000, code 123456" (the test number from step 4) |
+| App access | *Some functionality is restricted* → add the reviewer Gmail and password from step 4, with: "Tap Continue with Google and sign in with this account. Add it on the device if it isn't listed." |
 | Ads | No |
 | Content rating | Questionnaire: category *Utility / productivity / other*; users can share content (job posts): **yes**; no violence, sexual content, gambling or drugs |
 | Target audience | **18 and over** only |
@@ -109,8 +109,8 @@ Create the app (free, *App*, not a game), then fill in **Dashboard → Set up yo
 | Type | Purpose | Optional? |
 |---|---|---|
 | Personal info → Name | App functionality | Required |
-| Personal info → Email address | App functionality, Account management | Optional (Google sign-in, referral contact) |
-| Personal info → Phone number | Account management, App functionality | Optional (phone sign-in, referral contact) |
+| Personal info → Email address | Account management, App functionality | Required (Google sign-in); optional referral contact |
+| Personal info → Phone number | App functionality | Optional (referral contact only) |
 | Personal info → Other info (city, skills, experience, work email) | App functionality | Required for seekers / referrers |
 | Files and docs → Resume | App functionality | Required to apply |
 | App activity → Other user-generated content (posts, applications, answers, reports) | App functionality | Required |

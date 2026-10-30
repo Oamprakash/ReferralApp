@@ -1,12 +1,10 @@
 package com.referral.app.data
 
 import io.github.jan.supabase.SupabaseClient
-import io.github.jan.supabase.auth.OtpType
 import io.github.jan.supabase.auth.SignOutScope
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.Google
 import io.github.jan.supabase.auth.providers.builtin.IDToken
-import io.github.jan.supabase.auth.providers.builtin.OTP
 import io.github.jan.supabase.auth.status.SessionStatus
 import kotlinx.coroutines.flow.StateFlow
 import javax.inject.Inject
@@ -20,15 +18,6 @@ class AuthRepository @Inject constructor(
 
     val currentUserId: String?
         get() = supabase.auth.currentUserOrNull()?.id
-
-    /** Sends an SMS code. [phone] in E.164, e.g. +919876543210. */
-    suspend fun sendPhoneOtp(phone: String) {
-        supabase.auth.signInWith(OTP) { this.phone = phone }
-    }
-
-    suspend fun verifyPhoneOtp(phone: String, code: String) {
-        supabase.auth.verifyPhoneOtp(type = OtpType.Phone.SMS, phone = phone, token = code)
-    }
 
     /** Exchanges a Google ID token (from Credential Manager) for a Supabase session. */
     suspend fun signInWithGoogle(idToken: String, rawNonce: String) {
