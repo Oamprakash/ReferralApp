@@ -29,6 +29,9 @@ data class Nonce(val raw: String, val hashed: String) {
  * [activityContext] must be an Activity context; the chooser is a UI flow.
  */
 suspend fun requestGoogleIdToken(activityContext: Context, webClientId: String, hashedNonce: String): String {
+    check(webClientId.isNotBlank()) {
+        "This build has no Google client ID. Add GOOGLE_WEB_CLIENT_ID to android/local.properties, then Clean and rebuild."
+    }
     val option = GetSignInWithGoogleOption.Builder(webClientId)
         .setNonce(hashedNonce)
         .build()
@@ -50,5 +53,6 @@ fun googleErrorText(e: Throwable): String = when (e) {
     is androidx.credentials.exceptions.GetCredentialCancellationException -> "Google sign-in was cancelled."
     is androidx.credentials.exceptions.NoCredentialException ->
         "No Google account found on this phone. Add one in Settings → Accounts, then try again."
+    is IllegalStateException -> e.message ?: "Google sign-in isn't set up in this build."
     else -> "Google sign-in didn't work. Check your connection and that Google Play services is up to date.\n${e.message.orEmpty().take(120)}"
 }
