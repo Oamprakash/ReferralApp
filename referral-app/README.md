@@ -112,7 +112,7 @@ You need the Supabase CLI for the Edge Functions. Install it with Scoop on Windo
 1. Create a [Resend](https://resend.com) account and verify a sending domain you own.
 2. Set the secrets and switch dev mode off:
    ```bash
-   supabase secrets set RESEND_API_KEY=re_xxx EMAIL_FROM="ReferralApp <verify@yourdomain.com>"
+   supabase secrets set RESEND_API_KEY=re_xxx EMAIL_FROM="WarmIntro <verify@yourdomain.com>"
    supabase secrets unset OTP_DEV_MODE
    ```
    **Never leave `OTP_DEV_MODE` on in production.** Anyone could verify any work email.

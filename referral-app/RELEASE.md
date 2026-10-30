@@ -4,9 +4,9 @@ Work through this top to bottom for the first Play Store release. Commands are f
 
 ---
 
-## 1. Decide the name
+## 1. Name
 
-`ReferralApp` is still a placeholder. It's used in `android/app/src/main/res/values/strings.xml` (`app_name`), `store/listing.md`, the store graphics and the pages in `docs/`. Pick the real name before creating the Play listing, because the listing name is what people search for.
+The app is called **WarmIntro** (Play listing: "WarmIntro – Job Referrals"). It's set in `android/app/src/main/res/values/strings.xml` (`app_name`), `store/listing.md` and the pages in `docs/`. The package `com.referral.app` and the repo URL stay as they are; users never see them.
 
 ## 2. Create your upload key (once, keep it safe)
 
