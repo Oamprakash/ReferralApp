@@ -6,7 +6,7 @@ Work through this top to bottom for the first Play Store release. Commands are f
 
 ## 1. Name
 
-The app is called **WarmIntro** (Play listing: "WarmIntro – Job Referrals"). It's set in `android/app/src/main/res/values/strings.xml` (`app_name`), `store/listing.md` and the pages in `docs/`. The package `com.referral.app` and the repo URL stay as they are; users never see them.
+The app is called **WarmIntro** (Play listing: "WarmIntro – Job Referrals"). It's set in `android/app/src/main/res/values/strings.xml` (`app_name`), `store/listing.md` and the pages in `docs/`. The Play package (`applicationId`) is `com.oamsapps.warmintro`, because `com.referral.app` was already taken on Play. The Kotlin code keeps the `com.referral.app` namespace; users never see it.
 
 ## 2. Create your upload key (once, keep it safe)
 
@@ -71,7 +71,7 @@ For every later upload, bump `versionCode` in `app/build.gradle.kts` (2, 3, …)
 
 ## 5. Google sign-in for the Play build
 
-- [ ] In Play Console → Test and release → Setup → **App signing**, copy the **App signing key SHA-1**. In Google Cloud, add it as another **Android** OAuth client (package `com.referral.app`). Without it, Google sign-in fails for everyone who installs from Play.
+- [ ] In Play Console → Test and release → Setup → **App signing**, copy the **App signing key SHA-1**. In Google Cloud, add it as another **Android** OAuth client (package `com.oamsapps.warmintro`). Without it, Google sign-in fails for everyone who installs from Play.
 - [ ] Google Auth Platform → **Audience** → **Publish app**, so any Google account can sign in, not just test users.
 
 ## 6. Host the privacy policy and account-deletion pages

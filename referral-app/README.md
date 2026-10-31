@@ -51,7 +51,7 @@ android/
 ### 2. Google Cloud (for "Continue with Google")
 
 1. Create an OAuth **Web application** client. Its ID goes into Supabase and into `GOOGLE_WEB_CLIENT_ID`.
-2. Create an OAuth **Android** client with package `com.referral.app` and your debug keystore's SHA-1 (`./gradlew signingReport`). The app doesn't use this ID directly, but Google needs it registered.
+2. Create an OAuth **Android** client with package `com.oamsapps.warmintro` and your debug keystore's SHA-1 (`./gradlew signingReport`). The app doesn't use this ID directly, but Google needs it registered.
 
 ### 3. Android
 
@@ -160,7 +160,7 @@ A seeker can reapply **once** per job, while it's open, with fresh screening ans
 
 ### Push notifications (Firebase)
 
-**1. Firebase project.** At console.firebase.google.com, add a project (you can pick the Google Cloud project you made for Google sign-in). Add an Android app with package `com.referral.app`, download `google-services.json` and put it in `android/app/`. It's git-ignored.
+**1. Firebase project.** At console.firebase.google.com, add a project (you can pick the Google Cloud project you made for Google sign-in). Add an Android app with package `com.oamsapps.warmintro`, download `google-services.json` and put it in `android/app/`. It's git-ignored.
 
 **2. Service account key.** Firebase console → Project settings → Service accounts → *Generate new private key*. This file can send pushes as your app: keep it out of git and out of the app.
 
