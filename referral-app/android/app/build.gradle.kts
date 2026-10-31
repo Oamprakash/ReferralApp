@@ -34,7 +34,7 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.referral.app"
+        applicationId = "com.oamsapps.warmintro"
         minSdk = 26
         targetSdk = 36
         // Local builds: 1 / 1.0.0. The release workflow passes -PversionCode / -PversionName
