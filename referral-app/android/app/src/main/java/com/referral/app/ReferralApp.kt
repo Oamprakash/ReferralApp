@@ -2,6 +2,7 @@ package com.referral.app
 
 import android.app.Application
 import com.google.firebase.FirebaseApp
+import com.referral.app.analytics.Analytics
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.referral.app.push.PushRegistrar
 import dagger.hilt.android.HiltAndroidApp
@@ -16,5 +17,6 @@ class ReferralApp : Application() {
         if (FirebaseApp.getApps(this).isNotEmpty()) {
             FirebaseCrashlytics.getInstance().isCrashlyticsCollectionEnabled = !BuildConfig.DEBUG
         }
+        Analytics.init(this)
     }
 }

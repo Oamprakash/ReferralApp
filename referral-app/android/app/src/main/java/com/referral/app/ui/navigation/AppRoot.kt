@@ -20,6 +20,7 @@ import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -105,6 +106,9 @@ private fun SignedInGraph(startAtProfile: Boolean, onSignOut: () -> Unit) {
     val nav = rememberNavController()
     val entry by nav.currentBackStackEntryAsState()
     val dest = entry?.destination
+    // "com.referral.app.ui.navigation.JobDetailRoute/{jobId}" -> "JobDetail"
+    val screenName = dest?.route?.substringBefore('/')?.substringBefore('?')?.substringAfterLast('.')?.removeSuffix("Route")
+    LaunchedEffect(screenName) { screenName?.let { com.referral.app.analytics.Analytics.screen(it) } }
     val isProfileTab = dest?.hasRoute<ProfileRoute>() == true &&
         entry?.toRoute<ProfileRoute>()?.returnAfterSave == false && nav.previousBackStackEntry != null
     val showBar = isProfileTab || listOf(Tab.JOBS, Tab.MATCHES, Tab.APPLIED, Tab.POSTS).any { tab ->

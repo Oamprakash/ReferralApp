@@ -107,7 +107,8 @@ class JobRepository @Inject constructor(
             val created = supabase.from("applications")
                 .insert(NewApplication(jobId, uid(), answers.map { it.trim() })) { select(Columns.list("status")) }
                 .decodeSingle<JsonObject>()
-            return created["status"]?.jsonPrimitive?.content ?: "applied"
+            return (created["status"]?.jsonPrimitive?.content ?: "applied")
+                .also { com.referral.app.analytics.Analytics.applied(it) }
         } catch (e: Exception) {
             val m = e.message.orEmpty()
             throw when {
@@ -137,7 +138,7 @@ class JobRepository @Inject constructor(
         }
         val status = (json.parseToJsonElement(body) as? JsonObject)?.get("status")?.jsonPrimitive?.content
         return when (status) {
-            "applied", "waitlisted" -> status
+            "applied", "waitlisted" -> status.also { com.referral.app.analytics.Analytics.applied(it, reapply = true) }
             "already_reapplied" -> throw ApplyException.AlreadyReapplied()
             else -> throw ApplyException.NotAllowed()     // job_closed, profile_incomplete, not_found, not_withdrawn
         }

@@ -41,6 +41,7 @@ class SignInViewModel @Inject constructor(
     // On success the session status flips to Authenticated and AppRoot switches screens.
     fun onGoogleIdToken(idToken: String, rawNonce: String) = run("Google sign-in failed.", showReason = true) {
         auth.signInWithGoogle(idToken, rawNonce)
+        com.referral.app.analytics.Analytics.login()
     }
 
     fun onGoogleError(message: String?) = _ui.update { it.copy(error = message ?: "Google sign-in was cancelled.") }
