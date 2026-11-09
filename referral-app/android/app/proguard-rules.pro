@@ -1,3 +1,7 @@
+# Crash reports (Play vitals and Crashlytics): keep file names and line numbers in stack traces
+-keepattributes SourceFile,LineNumberTable
+-renamesourcefileattribute SourceFile
+
 # kotlinx.serialization: keep generated serializers for @Serializable models
 -keepattributes *Annotation*, InnerClasses
 -keepclassmembers @kotlinx.serialization.Serializable class com.referral.app.** {

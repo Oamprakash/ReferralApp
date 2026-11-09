@@ -9,10 +9,12 @@ plugins {
     alias(libs.plugins.hilt)
 }
 
-// Push notifications need app/google-services.json from your Firebase project (see README).
-// Until it's there the app builds and runs without push.
+// Push notifications and crash reports need app/google-services.json from your Firebase project (see README).
+// Until it's there the app builds and runs without them. With it, release builds also upload their
+// R8 mapping file to Crashlytics so crash stack traces are readable.
 if (file("google-services.json").exists()) {
     apply(plugin = "com.google.gms.google-services")
+    apply(plugin = "com.google.firebase.crashlytics")
 }
 
 // Secrets live in local.properties (git-ignored), never in source.
@@ -121,6 +123,7 @@ dependencies {
 
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.messaging)
+    implementation(libs.firebase.crashlytics)
 
     // Reads text out of resume PDFs on the phone (resume parser)
     implementation(libs.pdfbox.android)

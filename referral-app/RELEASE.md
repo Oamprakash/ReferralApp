@@ -114,8 +114,8 @@ Create the app (free, *App*, not a game), then fill in **Dashboard → Set up yo
 | Personal info → Other info (city, skills, experience, work email) | App functionality | Required for seekers / referrers |
 | Files and docs → Resume | App functionality | Required to apply |
 | App activity → Other user-generated content (posts, applications, answers, reports) | App functionality | Required |
-| App info and performance | not collected (no analytics or crash SDK) | n/a |
-| Device or other IDs → push token | App functionality | Required |
+| App info and performance → Crash logs, Diagnostics | App functionality, Analytics (Firebase Crashlytics) | Required |
+| Device or other IDs → push token, Crashlytics install ID | App functionality, Analytics | Required |
 
 ## 8. Closed testing, then production
 
