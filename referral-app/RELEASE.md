@@ -114,6 +114,8 @@ Create the app (free, *App*, not a game), then fill in **Dashboard → Set up yo
 | Personal info → Other info (city, skills, experience, work email) | App functionality | Required for seekers / referrers |
 | Files and docs → Resume | App functionality | Required to apply |
 | App activity → Other user-generated content (posts, applications, answers, reports) | App functionality | Required |
+| App activity → App interactions (screen views, key actions; Firebase Analytics) | Analytics | Required |
+| Location → Approximate location (estimated from IP by Firebase Analytics) | Analytics | Required |
 | App info and performance → Crash logs, Diagnostics | App functionality, Analytics (Firebase Crashlytics) | Required |
 | Device or other IDs → push token, Crashlytics install ID | App functionality, Analytics | Required |
 

@@ -67,6 +67,7 @@ class ReferrerRepository @Inject constructor(
     suspend fun postJob(job: NewJob) {
         try {
             supabase.from("jobs").insert(job)
+            com.referral.app.analytics.Analytics.jobPosted()
         } catch (e: Exception) {
             if (e.message?.contains("ACTIVE_POST_LIMIT") == true) throw ActivePostLimitException()
             throw e
@@ -87,6 +88,7 @@ class ReferrerRepository @Inject constructor(
             supabase.from("jobs").update(ConfirmUpdate("active", Instant.now().toString())) {
                 filter { eq("id", postId) }
             }
+            com.referral.app.analytics.Analytics.stillHiringConfirmed()
         } catch (e: Exception) {
             val m = e.message.orEmpty()
             when {

@@ -39,6 +39,7 @@ class ProfileRepository @Inject constructor(
         supabase.from(PROFILES).update(ResumePath(path)) {
             filter { eq("id", uid()) }
         }
+        com.referral.app.analytics.Analytics.resumeUploaded()
         return path
     }
 
