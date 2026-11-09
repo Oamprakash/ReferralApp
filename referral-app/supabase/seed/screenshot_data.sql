@@ -12,6 +12,8 @@
 --   3. Makes your account a verified referrer at "Kaveri Cloud Systems" with two posts,
 --      each with applicants from the seed users, so My posts and Applicants have data.
 --
+-- Run it once per account you want filled (e.g. your own, then the Play reviewer account).
+--
 -- You'll get a few push notifications while it runs; that's the app working.
 -- Remove everything later with remove_seed_data.sql: it deletes the seed companies,
 -- which also removes your seed posts, your verification there and your applications to seed jobs.
@@ -72,7 +74,7 @@ begin
 
   -- ---------- 3. You as a referrer with two posts ----------
   insert into public.referrer_verifications (user_id, company_id, work_email)
-  values (me, kaveri, 'you@kavericloud.test')
+  values (me, kaveri, split_part(my_email, '@', 1) || '@kavericloud.test')   -- unique per account
   on conflict (user_id, company_id) do update set verified_at = now(), expires_at = now() + interval '90 days';
 
   -- Replace earlier screenshot posts
