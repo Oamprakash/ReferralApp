@@ -204,14 +204,14 @@ private fun PageContent(page: TourPage, onSkip: (() -> Unit)?, replay: Boolean) 
             Modifier.padding(horizontal = Space.screen, vertical = Space.xl),
             verticalArrangement = Arrangement.spacedBy(Space.md),
         ) {
-            Text(page.title, style = MaterialTheme.typography.headlineMedium)
+            Text(page.title, style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.onBackground)
             Text(page.body, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(Modifier.height(Space.xs))
             page.tips.forEach { tip ->
                 Row(horizontalArrangement = Arrangement.spacedBy(Space.sm), verticalAlignment = Alignment.Top) {
                     Icon(Icons.Filled.CheckCircle, contentDescription = null, tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(18.dp).padding(top = 2.dp))
-                    Text(tip, style = MaterialTheme.typography.bodyMedium)
+                    Text(tip, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onBackground)
                 }
             }
         }

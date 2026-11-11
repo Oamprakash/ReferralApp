@@ -1,6 +1,7 @@
 package com.referral.app.ui.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -13,12 +14,12 @@ import androidx.compose.runtime.ReadOnlyComposable
 @Composable
 fun ReferralTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit) {
     CompositionLocalProvider(LocalExtraColors provides if (darkTheme) DarkExtra else LightExtra) {
-        MaterialTheme(
-            colorScheme = if (darkTheme) DarkColors else LightColors,
-            typography = AppTypography,
-            shapes = AppShapes,
-            content = content,
-        )
+        val colors = if (darkTheme) DarkColors else LightColors
+        MaterialTheme(colorScheme = colors, typography = AppTypography, shapes = AppShapes) {
+            // Text drawn straight on the background (outside a Surface/Scaffold) otherwise falls back to
+            // black, which disappears in dark mode.
+            CompositionLocalProvider(LocalContentColor provides colors.onBackground, content = content)
+        }
     }
 }
 
