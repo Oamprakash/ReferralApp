@@ -4,7 +4,7 @@ Release notes shown to testers and users on Google Play live in `store/whatsnew/
 (max 500 characters). The release workflow uploads that file with each build. This file is the
 detailed, developer-facing history.
 
-## 1.0.1 (versionCode 2)
+## 1.0.2 (versionCode 3)
 
 **User-facing**
 - Dark mode: onboarding headline and tick-list text were black on the dark background. The theme now
