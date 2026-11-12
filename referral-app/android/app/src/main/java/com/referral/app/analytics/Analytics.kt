@@ -10,7 +10,8 @@ import com.referral.app.BuildConfig
  * Thin wrapper over Firebase Analytics.
  *
  * - No-op when Firebase isn't set up (no google-services.json), so the app still runs without it.
- * - Collection is off in debug builds, so the dashboard shows real users only.
+ * - Collection is off in debug builds, so the dashboard shows real users only. To test events from a
+ *   debug build, add ANALYTICS_IN_DEBUG=true to android/local.properties and watch Firebase → DebugView.
  * - Never log personal data here: no names, emails, job titles typed by users, or resume content.
  *   Events carry only coarse, non-identifying values.
  */
@@ -20,7 +21,7 @@ object Analytics {
     fun init(context: Context) {
         if (FirebaseApp.getApps(context).isEmpty()) return
         fa = FirebaseAnalytics.getInstance(context).apply {
-            setAnalyticsCollectionEnabled(!BuildConfig.DEBUG)
+            setAnalyticsCollectionEnabled(!BuildConfig.DEBUG || BuildConfig.ANALYTICS_IN_DEBUG)
         }
     }
 
@@ -37,6 +38,9 @@ object Analytics {
         putString("status", status)
         putString("reapply", reapply.toString())
     }
+
+    /** A job opened from a list. from: "Jobs", "ForYou" or "Applied". */
+    fun jobOpened(from: String) = log("open_job") { putString("from", from) }
 
     fun resumeUploaded() = log("resume_upload")
     fun jobPosted() = log("post_job")

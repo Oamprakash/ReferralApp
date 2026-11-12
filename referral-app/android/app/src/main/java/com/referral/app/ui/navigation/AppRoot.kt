@@ -30,6 +30,7 @@ import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.toRoute
+import com.referral.app.analytics.Analytics
 import com.referral.app.ui.common.LoadingBox
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -106,9 +107,13 @@ private fun SignedInGraph(startAtProfile: Boolean, onSignOut: () -> Unit) {
     val nav = rememberNavController()
     val entry by nav.currentBackStackEntryAsState()
     val dest = entry?.destination
-    // "com.referral.app.ui.navigation.JobDetailRoute/{jobId}" -> "JobDetail"
-    val screenName = dest?.route?.substringBefore('/')?.substringBefore('?')?.substringAfterLast('.')?.removeSuffix("Route")
-    LaunchedEffect(screenName) { screenName?.let { com.referral.app.analytics.Analytics.screen(it) } }
+    // One screen_view per navigation (re-opening a tab counts again). Names are explicit because R8
+    // renames the route classes in release builds.
+    LaunchedEffect(entry?.id) { dest?.let(::screenName)?.let { Analytics.screen(it) } }
+    fun openJob(id: String, from: String) {
+        Analytics.jobOpened(from)
+        nav.navigate(JobDetailRoute(id))
+    }
     val isProfileTab = dest?.hasRoute<ProfileRoute>() == true &&
         entry?.toRoute<ProfileRoute>()?.returnAfterSave == false && nav.previousBackStackEntry != null
     val showBar = isProfileTab || listOf(Tab.JOBS, Tab.MATCHES, Tab.APPLIED, Tab.POSTS).any { tab ->
@@ -166,20 +171,20 @@ private fun SignedInGraph(startAtProfile: Boolean, onSignOut: () -> Unit) {
             }
             composable<HomeRoute> {
                 HomeScreen(
-                    onOpenJob = { id -> nav.navigate(JobDetailRoute(id)) },
+                    onOpenJob = { id -> openJob(id, "Jobs") },
                     onMatches = { nav.switchTab(Tab.MATCHES) },
                     onProfile = { nav.switchTab(Tab.PROFILE) },
                 )
             }
             composable<MatchesRoute> {
                 MatchesScreen(
-                    onOpenJob = { id -> nav.navigate(JobDetailRoute(id)) },
+                    onOpenJob = { id -> openJob(id, "ForYou") },
                     onEditProfile = { nav.navigate(ProfileRoute(returnAfterSave = true)) },
                 )
             }
             composable<MyApplicationsRoute> {
                 MyApplicationsScreen(
-                    onOpenJob = { id -> nav.navigate(JobDetailRoute(id)) },
+                    onOpenJob = { id -> openJob(id, "Applied") },
                     onBrowse = { nav.switchTab(Tab.JOBS) },
                 )
             }
@@ -231,4 +236,21 @@ private fun SignedInGraph(startAtProfile: Boolean, onSignOut: () -> Unit) {
             }
         }
     }
+}
+
+/** Readable analytics screen names, matched by type so they survive R8. */
+private fun screenName(d: NavDestination): String? = when {
+    d.hasRoute<HomeRoute>() -> "Jobs"
+    d.hasRoute<MatchesRoute>() -> "ForYou"
+    d.hasRoute<MyApplicationsRoute>() -> "Applied"
+    d.hasRoute<MyPostsRoute>() -> "MyPosts"
+    d.hasRoute<ProfileRoute>() -> "Profile"
+    d.hasRoute<JobDetailRoute>() -> "JobDetail"
+    d.hasRoute<ApplyRoute>() -> "Apply"
+    d.hasRoute<ApplicantsRoute>() -> "Applicants"
+    d.hasRoute<PostJobRoute>() -> "PostJob"
+    d.hasRoute<VerifyRoute>() -> "Verify"
+    d.hasRoute<AdminRoute>() -> "Admin"
+    d.hasRoute<HowItWorksRoute>() -> "HowItWorks"
+    else -> null
 }

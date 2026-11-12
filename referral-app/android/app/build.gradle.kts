@@ -47,6 +47,8 @@ android {
         buildConfigField("String", "SUPABASE_URL", secret("SUPABASE_URL"))
         buildConfigField("String", "SUPABASE_ANON_KEY", secret("SUPABASE_ANON_KEY"))
         buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", secret("GOOGLE_WEB_CLIENT_ID"))
+        // Debug builds don't send analytics unless local.properties has ANALYTICS_IN_DEBUG=true
+        buildConfigField("boolean", "ANALYTICS_IN_DEBUG", localProps.getProperty("ANALYTICS_IN_DEBUG", "false").toBoolean().toString())
     }
 
     signingConfigs {
