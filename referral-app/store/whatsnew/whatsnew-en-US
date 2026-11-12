@@ -1,4 +1,4 @@
-What's new in 1.0.1
+What's new in 1.0.2
 
 • Dark mode: fixed text that was hard to read on the welcome screens
 • Crash reports: if the app crashes, a report (error, phone model, app version) is sent so we can fix it fast. No personal data.
