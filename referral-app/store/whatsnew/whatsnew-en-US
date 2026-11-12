@@ -1,0 +1,7 @@
+What's new in 1.0.1
+
+• Dark mode: fixed text that was hard to read on the welcome screens
+• Crash reports: if the app crashes, a report (error, phone model, app version) is sent so we can fix it fast. No personal data.
+• Usage statistics: we now see which screens and features are used, so we know what to improve. Anonymous, no ads, no advertising ID.
+
+Thanks for testing! Found a problem? Tell us via the Play page or oamprakash+warmintro@gmail.com

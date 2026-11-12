@@ -123,6 +123,7 @@ jobs:
           track: ${{ github.event_name == 'push' && 'alpha' || inputs.track }}
           status: ${{ github.event_name == 'push' && 'completed' || inputs.status }}
           releaseName: ${{ steps.version.outputs.name }} (${{ steps.version.outputs.code }})
+          whatsNewDirectory: referral-app/store/whatsnew
 
       - name: Clean up secrets
         if: always()
