@@ -59,6 +59,10 @@ import com.referral.app.ui.common.Tone
 import com.referral.app.ui.common.VerifiedBadge
 import com.referral.app.ui.theme.Space
 import com.referral.app.ui.theme.extra
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.material3.IconButton
+import com.referral.app.links.JobLinks
+import com.referral.app.analytics.Analytics
 
 @Composable
 fun JobDetailScreen(
@@ -68,6 +72,7 @@ fun JobDetailScreen(
     viewModel: JobDetailViewModel = hiltViewModel(),
 ) {
     val ui by viewModel.ui.collectAsStateWithLifecycle()
+    val context = LocalContext.current
     var confirm by remember { mutableStateOf<ConfirmRequest?>(null) }
     var reportOpen by remember { mutableStateOf(false) }
     ConfirmDialog(confirm, onDismiss = { confirm = null })
@@ -79,7 +84,18 @@ fun JobDetailScreen(
 
     val job = ui.job
     Scaffold(
-        topBar = { AppTopBar("", onBack = onBack) },
+        topBar = {
+            AppTopBar("", onBack = onBack, actions = {
+                if (job != null && job.status == "active") {
+                    IconButton(onClick = {
+                        val text = if (job.isMine) JobLinks.referrerText(job.title, job.companyName, job.location, job.id)
+                            else JobLinks.seekerText(job.title, job.companyName, job.location, job.id)
+                        Analytics.jobShared(asReferrer = job.isMine)
+                        JobLinks.share(context, text)
+                    }) { Icon(Icons.Filled.Share, contentDescription = "Share job") }
+                }
+            })
+        },
         containerColor = MaterialTheme.colorScheme.background,
         bottomBar = {
             if (job != null) {

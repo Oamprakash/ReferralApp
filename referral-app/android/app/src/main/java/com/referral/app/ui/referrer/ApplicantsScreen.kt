@@ -55,6 +55,8 @@ import com.referral.app.ui.common.SmallButton
 import com.referral.app.ui.common.StatusPill
 import com.referral.app.ui.common.Tone
 import com.referral.app.ui.theme.Space
+import androidx.compose.ui.platform.LocalContext
+import com.referral.app.links.ReviewPrompt
 
 @OptIn(ExperimentalMaterial3Api::class)   // PullToRefreshBox / scrollable tab row
 @Composable
@@ -64,6 +66,10 @@ fun ApplicantsScreen(
 ) {
     val ui by viewModel.ui.collectAsStateWithLifecycle()
     val uriHandler = LocalUriHandler.current
+    val context = LocalContext.current
+    // A good moment to ask for a rating: this referrer has referred someone
+    val referredSomeone = ui.applicants.any { it.status in setOf("referred", "interview", "offer") }
+    LaunchedEffect(referredSomeone) { if (referredSomeone) ReviewPrompt.maybeAsk(context, "referrer_referred") }
     var confirm by remember { mutableStateOf<ConfirmRequest?>(null) }
     var reporting by remember { mutableStateOf<Applicant?>(null) }
 

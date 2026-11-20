@@ -127,6 +127,7 @@ dependencies {
     implementation(libs.firebase.messaging)
     implementation(libs.firebase.crashlytics)
     implementation(libs.firebase.analytics)
+    implementation(libs.play.review)
 
     // Reads text out of resume PDFs on the phone (resume parser)
     implementation(libs.pdfbox.android)

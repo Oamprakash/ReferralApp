@@ -39,8 +39,15 @@ object Analytics {
         putString("reapply", reapply.toString())
     }
 
-    /** A job opened from a list. from: "Jobs", "ForYou" or "Applied". */
+    /** A job opened from a list or a shared link. from: "Jobs", "ForYou", "Applied" or "Link". */
     fun jobOpened(from: String) = log("open_job") { putString("from", from) }
+
+    fun jobShared(asReferrer: Boolean) = log(FirebaseAnalytics.Event.SHARE) {
+        putString(FirebaseAnalytics.Param.CONTENT_TYPE, "job")
+        putString(FirebaseAnalytics.Param.METHOD, if (asReferrer) "referrer" else "seeker")
+    }
+
+    fun reviewPrompted(reason: String) = log("review_prompt") { putString("reason", reason) }
 
     fun resumeUploaded() = log("resume_upload")
     fun jobPosted() = log("post_job")

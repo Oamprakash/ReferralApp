@@ -49,6 +49,9 @@ import com.referral.app.ui.common.StatusPill
 import com.referral.app.ui.common.Tone
 import com.referral.app.ui.theme.Space
 import com.referral.app.ui.theme.extra
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalContext
+import com.referral.app.links.ReviewPrompt
 
 @Composable
 fun MyApplicationsScreen(
@@ -57,6 +60,10 @@ fun MyApplicationsScreen(
     viewModel: MyApplicationsViewModel = hiltViewModel(),
 ) {
     val ui by viewModel.ui.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    // A good moment to ask for a rating: one of their applications got referred (or further)
+    val progressed = ui.applications.any { it.status in setOf("referred", "interview", "offer") }
+    LaunchedEffect(progressed) { if (progressed) ReviewPrompt.maybeAsk(context, "seeker_referred") }
     var confirm by remember { mutableStateOf<ConfirmRequest?>(null) }
     ConfirmDialog(confirm, onDismiss = { confirm = null })
 
