@@ -12,8 +12,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.filled.Create
-import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -70,18 +72,14 @@ fun MyPostsScreen(
     }
 
     Scaffold(
-        topBar = { AppTopBar("My posts", subtitle = "Openings you've shared as an employee") },
-        containerColor = MaterialTheme.colorScheme.background,
-        floatingActionButton = {
-            ExtendedFloatingActionButton(
-                onClick = onPostJob,
-                icon = { Icon(Icons.Filled.Add, contentDescription = null) },
-                text = { Text("Post a job", style = MaterialTheme.typography.labelLarge) },
-                containerColor = MaterialTheme.extra.accent,
-                contentColor = MaterialTheme.extra.onAccent,
-                shape = MaterialTheme.shapes.medium,
-            )
+        topBar = {
+            AppTopBar("My posts", subtitle = "Openings you've shared as an employee") {
+                // In the top bar rather than a floating button, so it never covers a card's actions
+                SmallButton("Post a job", onPostJob, filled = true, icon = Icons.Filled.Add)
+                Spacer(Modifier.width(Space.sm))
+            }
         },
+        containerColor = MaterialTheme.colorScheme.background,
     ) { padding ->
         if (ui.loading) {
             LoadingBox(Modifier.padding(padding))
@@ -89,7 +87,7 @@ fun MyPostsScreen(
         }
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(padding),
-            contentPadding = PaddingValues(start = Space.screen, end = Space.screen, top = Space.sm, bottom = 96.dp),
+            contentPadding = PaddingValues(start = Space.screen, end = Space.screen, top = Space.sm, bottom = Space.xxl),
             verticalArrangement = Arrangement.spacedBy(Space.md),
         ) {
             item { ImpactCard(ui) }
@@ -171,18 +169,27 @@ private fun PostCard(
 ) {
     val x = MaterialTheme.extra
     val c = MaterialTheme.colorScheme
+    val daysLeft = (14 - post.confirmedDaysAgo.toInt()).coerceAtLeast(1)
     val look = when {
         post.hiddenReason == "admin" -> StatusLook("Removed", c.errorContainer, c.onErrorContainer, "Removed by moderators after review.")
         post.hiddenReason == "reports" -> StatusLook("Under review", c.errorContainer, c.onErrorContainer, "Hidden after reports from users. We'll notify you.")
         post.status == "closed" -> StatusLook("Closed", c.surfaceVariant, c.onSurfaceVariant, null)
-        post.hiddenReason == "verification" -> StatusLook("Hidden", x.warningContainer, x.onWarningContainer, "Your work email verification expired. Verify again, then tap Still hiring.")
-        post.status == "hidden" || post.isStale -> StatusLook("Hidden", x.warningContainer, x.onWarningContainer, "Not confirmed for 14 days. Tap Still hiring to bring it back.")
-        post.confirmedDaysAgo >= 12 -> StatusLook("Confirm soon", x.warningContainer, x.onWarningContainer, "Hides after 14 days without a confirmation (${post.confirmedDaysAgo} days now).")
+        // Hidden = paused, so neutral grey; amber is kept for "act soon"
+        post.hiddenReason == "verification" -> StatusLook("Hidden", c.surfaceVariant, c.onSurfaceVariant,
+            "Your work email verification expired. Verify again to bring it back.")
+        post.status == "hidden" || post.isStale -> StatusLook("Hidden", c.surfaceVariant, c.onSurfaceVariant,
+            "Hidden from job seekers. Tap Still hiring to bring it back.")
+        post.confirmedDaysAgo >= 12 -> StatusLook("Confirm soon", x.warningContainer, x.onWarningContainer,
+            "Auto-hides in $daysLeft day${if (daysLeft == 1) "" else "s"}. Confirm you're still hiring.")
         else -> StatusLook("Live", x.successContainer, x.onSuccessContainer, null)
     }
+    val open = post.status != "closed" && !post.isModerated     // moderated: only moderators can bring it back
+    val needsVerify = open && post.hiddenReason == "verification"
+    val hidden = open && look.label == "Hidden"
+    val needsConfirm = open && look.label != "Live"
 
     AppCard(onClick = onApplicants) {
-        Row(verticalAlignment = Alignment.Top) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Text(post.title, style = MaterialTheme.typography.titleMedium)
                 Text(
@@ -191,8 +198,24 @@ private fun PostCard(
                 )
             }
             Pill(look.label, look.bg, look.fg)
+            // Close (and the less common actions) live up here, away from the main buttons
+            if (post.status != "closed") {
+                CardMenu(
+                    buildList {
+                        if (open && !needsConfirm) add(MenuAction("Still hiring", onClick = onConfirm))
+                        if (needsVerify) add(MenuAction("Still hiring", onClick = onConfirm))
+                        if (post.isActive && !post.isModerated && needsConfirm) add(MenuAction("Share", onClick = onShare))
+                        add(MenuAction("Close post", destructive = true, onClick = onClose))
+                    },
+                    enabled = !busy,
+                )
+            }
         }
-        look.note?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = look.fg) }
+        look.note?.let {
+            Text(it, style = MaterialTheme.typography.bodySmall,
+                color = if (look.label == "Confirm soon") x.warning else c.onSurfaceVariant)
+            HorizontalDivider(color = x.cardBorder)
+        }
 
         val applicants = summary?.applicants ?: 0
         val newCount = summary?.newCount ?: 0
@@ -202,26 +225,28 @@ private fun PostCard(
             style = MaterialTheme.typography.bodyMedium.tabular(), color = c.onSurfaceVariant,
         )
 
-        // One main action on the card; "Still hiring" shows here only when the post needs it,
-        // everything else is in the ⋮ menu.
-        val open = post.status != "closed" && !post.isModerated     // moderated: only moderators can bring it back
-        val needsVerify = open && post.hiddenReason == "verification"
-        val needsConfirm = open && look.label != "Live"
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            SmallButton(if (newCount > 0) "Review $newCount new" else "Applicants", onApplicants, filled = true)
-            androidx.compose.foundation.layout.Spacer(Modifier.weight(1f))
-            if (needsVerify) SmallButton("Verify", onVerify, enabled = !busy)
-            else if (needsConfirm) SmallButton("Still hiring", onConfirm, enabled = !busy)
-            if (post.status != "closed") {
-                CardMenu(
-                    buildList {
-                        if (needsVerify) add(MenuAction("Still hiring", onClick = onConfirm))
-                        if (open && !needsConfirm) add(MenuAction("Still hiring", onClick = onConfirm))
-                        if (post.isActive && !post.isModerated) add(MenuAction("Share", onClick = onShare))
-                        add(MenuAction("Close post", destructive = true, onClick = onClose))
-                    },
-                    enabled = !busy,
-                )
+        // Two equal buttons. When the post is hidden, bringing it back is the main action.
+        val reviewLabel = if (newCount > 0) "Review $newCount new" else "Applicants"
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Space.sm)) {
+            val half = Modifier.weight(1f)
+            when {
+                needsVerify -> {
+                    SmallButton("Verify again", onVerify, enabled = !busy, filled = true, modifier = half)
+                    SmallButton(reviewLabel, onApplicants, outlined = true, modifier = half)
+                }
+                hidden -> {
+                    SmallButton("Still hiring", onConfirm, enabled = !busy, filled = true, modifier = half)
+                    SmallButton(reviewLabel, onApplicants, outlined = true, modifier = half)
+                }
+                needsConfirm -> {
+                    SmallButton(reviewLabel, onApplicants, filled = true, modifier = half)
+                    SmallButton("Still hiring", onConfirm, enabled = !busy, outlined = true, modifier = half)
+                }
+                post.isActive && !post.isModerated -> {
+                    SmallButton(reviewLabel, onApplicants, filled = true, modifier = half)
+                    SmallButton("Share", onShare, enabled = !busy, outlined = true, modifier = half)
+                }
+                else -> SmallButton(reviewLabel, onApplicants, filled = true, modifier = half)
             }
         }
     }

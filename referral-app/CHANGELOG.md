@@ -50,6 +50,15 @@ detailed, developer-facing history.
   a quiet "View details". Withdraw stays in the ⋮ menu.
 - Weekly quota bar track is a clearer grey, so it reads as a bar at 0 of 10.
 
+**My posts (design review)**
+- "My posts" tab shows only while the work-email verification is valid (was: ever verified). Re-checked
+  on every app resume; if it lapses, the tab goes away and Profile → "Hiring at your company?" leads back.
+- "Post a job" moved from the floating button to the top bar, so it never covers a card.
+- "Hidden" pill is neutral grey; "Confirm soon" stays amber with "Auto-hides in N days. Confirm you're still hiring."
+- Two equal buttons per card: Review (filled) + Still hiring / Share (outlined). On a hidden post,
+  Still hiring (or Verify again) is the filled one. Close is in the ⋮ menu next to the status pill.
+- Divider between the status note and the applicant counts; bottom-tab labels kept to one line.
+
 ## 1.0.2 (versionCode 3)
 
 **User-facing**

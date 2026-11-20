@@ -53,19 +53,6 @@ class ReferrerRepository @Inject constructor(
             }
             .decodeSingleOrNull<MyVerification>()
 
-    /**
-     * True if the caller has ever verified a work email, even if it has since expired.
-     * Decides whether the "My posts" tab is shown: job seekers don't need it.
-     */
-    suspend fun hasEverVerified(): Boolean =
-        supabase.from("referrer_verifications")
-            .select(Columns.raw("user_id")) {
-                filter { eq("user_id", uid()) }
-                limit(1)
-            }
-            .decodeList<kotlinx.serialization.json.JsonObject>()
-            .isNotEmpty()
-
     suspend fun requestWorkEmailOtp(email: String): OtpResponse =
         invoke("request-work-email-otp", EmailBody(email.trim()))
 
