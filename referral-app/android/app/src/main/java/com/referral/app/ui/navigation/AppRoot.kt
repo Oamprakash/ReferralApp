@@ -73,10 +73,12 @@ import kotlinx.serialization.Serializable
 fun AppRoot(viewModel: RootViewModel = hiltViewModel()) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val showTour by viewModel.showTour.collectAsStateWithLifecycle()
+    val tourReplay by viewModel.tourReplay.collectAsStateWithLifecycle()
 
     when (val s = state) {
         RootState.Loading -> LoadingBox()
-        RootState.SignedOut -> if (showTour) OnboardingScreen(onDone = viewModel::finishTour) else SignInScreen()
+        RootState.SignedOut -> if (showTour) OnboardingScreen(onDone = viewModel::finishTour, replay = tourReplay)
+            else SignInScreen(onHowItWorks = viewModel::replayTour)
         is RootState.SignedIn -> SignedInGraph(startAtProfile = s.needsProfile, onSignOut = viewModel::signOut)
         is RootState.Suspended -> SuspendedScreen(reason = s.reason, onSignOut = viewModel::signOut)
     }
@@ -103,8 +105,14 @@ private fun NavHostController.switchTab(tab: Tab) = navigate(tab.route) {
 }
 
 @Composable
-private fun SignedInGraph(startAtProfile: Boolean, onSignOut: () -> Unit) {
+private fun SignedInGraph(
+    startAtProfile: Boolean,
+    onSignOut: () -> Unit,
+    tabsViewModel: TabsViewModel = hiltViewModel(),
+) {
     val nav = rememberNavController()
+    val showPosts by tabsViewModel.showPosts.collectAsStateWithLifecycle()
+    val tabs = Tab.entries.filter { it != Tab.POSTS || showPosts }
     val entry by nav.currentBackStackEntryAsState()
     val dest = entry?.destination
     // One screen_view per navigation (re-opening a tab counts again). Names are explicit because R8
@@ -125,7 +133,7 @@ private fun SignedInGraph(startAtProfile: Boolean, onSignOut: () -> Unit) {
         bottomBar = {
             if (showBar) {
                 NavigationBar(containerColor = MaterialTheme.colorScheme.surface, tonalElevation = 0.dp) {
-                    Tab.entries.forEach { tab ->
+                    tabs.forEach { tab ->
                         val selected = if (tab == Tab.PROFILE) isProfileTab
                             else dest?.hierarchy?.any { tab.isAt(it) } == true
                         NavigationBarItem(
@@ -166,6 +174,7 @@ private fun SignedInGraph(startAtProfile: Boolean, onSignOut: () -> Unit) {
                     },
                     onAdmin = { nav.navigate(AdminRoute) },
                     onHowItWorks = { nav.navigate(HowItWorksRoute) },
+                    onPostJob = if (showPosts) null else ({ nav.navigate(PostJobRoute) }),
                     onSignOut = onSignOut,
                 )
             }
@@ -222,7 +231,10 @@ private fun SignedInGraph(startAtProfile: Boolean, onSignOut: () -> Unit) {
             composable<VerifyRoute> {
                 VerifyWorkEmailScreen(
                     onBack = { nav.popBackStack() },
-                    onVerified = { nav.popBackStack() },           // back to Post a job, which re-checks
+                    onVerified = {
+                        tabsViewModel.markReferrer()                    // "My posts" tab appears
+                        nav.popBackStack()                              // back to Post a job, which re-checks
+                    },
                 )
             }
             composable<ApplicantsRoute> {

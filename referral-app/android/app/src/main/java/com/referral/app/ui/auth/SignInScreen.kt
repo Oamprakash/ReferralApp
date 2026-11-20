@@ -23,6 +23,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
@@ -46,7 +47,7 @@ import com.referral.app.ui.theme.extra
 import kotlinx.coroutines.launch
 
 @Composable
-fun SignInScreen(viewModel: SignInViewModel = hiltViewModel()) {
+fun SignInScreen(onHowItWorks: () -> Unit = {}, viewModel: SignInViewModel = hiltViewModel()) {
     val ui by viewModel.ui.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -119,6 +120,9 @@ fun SignInScreen(viewModel: SignInViewModel = hiltViewModel()) {
                     },
                     loading = ui.loading,
                 )
+                TextButton(onClick = onHowItWorks, modifier = Modifier.align(Alignment.CenterHorizontally)) {
+                    Text("New here? See how WarmIntro works")
+                }
 
                 ui.error?.let { Banner(it, Tone.ERROR) }
 

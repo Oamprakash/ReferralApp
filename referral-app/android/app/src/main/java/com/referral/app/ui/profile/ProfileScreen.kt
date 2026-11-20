@@ -26,6 +26,7 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.AccountBox
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Share
@@ -80,6 +81,8 @@ fun ProfileScreen(
     onBack: (() -> Unit)? = null,
     onAdmin: () -> Unit = {},
     onHowItWorks: () -> Unit = {},
+    /** Shown to people without the "My posts" tab, so job seekers can still find posting. */
+    onPostJob: (() -> Unit)? = null,
     onSignOut: () -> Unit = {},
     viewModel: ProfileViewModel = hiltViewModel(),
 ) {
@@ -197,6 +200,10 @@ fun ProfileScreen(
                 AppCard(contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = Space.sm)) {
                     MenuRow(Icons.Filled.Info, "How the app works", "Tips for seekers and referrers", onClick = onHowItWorks)
                     HorizontalDivider(color = MaterialTheme.extra.cardBorder)
+                    onPostJob?.let {
+                        MenuRow(Icons.Filled.Create, "Hiring at your company?", "Verify your work email and post openings", onClick = it)
+                        HorizontalDivider(color = MaterialTheme.extra.cardBorder)
+                    }
                     if (ui.isAdmin) {
                         MenuRow(Icons.Filled.Build, "Admin", "Reports and company requests", onClick = onAdmin)
                         HorizontalDivider(color = MaterialTheme.extra.cardBorder)
