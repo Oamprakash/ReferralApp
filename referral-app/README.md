@@ -313,3 +313,4 @@ It adds `job_posters()`, which gives the first name and referral count behind ea
 Until it's applied the app works as before, just without the "Posted by …" line.
 Also run `migrations/20261122000000_job_posters_applied.sql`: the same function then also answers for jobs you've
 applied to, so the Applied tab can show "Sent to Arjun".
+And `migrations/20261123000000_overqualified_score.sql`: experience above the job's range scores 25/50 instead of 0.
