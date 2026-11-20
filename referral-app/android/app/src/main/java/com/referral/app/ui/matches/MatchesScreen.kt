@@ -129,11 +129,11 @@ private fun MatchCard(m: JobMatch, myYears: Int?, onClick: () -> Unit, modifier:
 /** One half of the score: label, points out of 50, a bar, and why. */
 @Composable
 private fun ScoreBar(label: String, points: Int, caption: String) {
-    // Half the points or more is a good fit (green, e.g. 3 of 4 skills); some is amber; none is plain grey.
-    // Never red: a gap isn't an error, and red put people off roles they could still get.
+    // Half the points or more is a good fit (green, e.g. 3 of 4 skills); some is teal; none is plain grey.
+    // No red or amber: a gap isn't an error, and warm colours put people off roles they could still get.
     val color = when {
         points >= 25 -> MaterialTheme.extra.success
-        points > 0 -> MaterialTheme.extra.warning
+        points > 0 -> MaterialTheme.colorScheme.primary
         else -> MaterialTheme.colorScheme.onSurfaceVariant
     }
     Column(verticalArrangement = Arrangement.spacedBy(Space.xs)) {

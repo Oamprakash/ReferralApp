@@ -103,7 +103,8 @@ Play "What's new": `store/whatsnew/whatsnew-en-US`.
 - Bookmark in the top bar next to Share; 1dp line above the bottom bar instead of a shadow.
 
 **Small fixes**
-- Best matches score bars: green from half the points (e.g. 3 of 4 skills), amber below, grey at zero; no red.
+- Match colours: score ring and badge green from 60, teal from 30, grey below; score bars green from half the points
+  (e.g. 3 of 4 skills), teal below, grey at zero. No amber or red (the dark amber read as red).
 - Profile menu cards no longer get extra gaps between rows (#33).
 - 4dp between a screen title and its subtitle (#34).
 - My posts status pill lines up with the title's first line (#35).
