@@ -1,8 +1,7 @@
 package com.referral.app.ui.seeker
 
-import androidx.compose.foundation.background
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -13,7 +12,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material3.LinearProgressIndicator
@@ -27,8 +25,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -130,7 +132,7 @@ private fun WeeklyQuota(used: Int) {
             progress = { (used / 10f).coerceIn(0f, 1f) },
             modifier = Modifier.fillMaxWidth().height(8.dp),
             strokeCap = StrokeCap.Round,
-            trackColor = MaterialTheme.colorScheme.surfaceVariant,
+            trackColor = MaterialTheme.colorScheme.outlineVariant,   // #E2E8F0: reads as a bar even at 0
             gapSize = 0.dp,
             drawStopIndicator = {},
         )
@@ -141,8 +143,8 @@ private fun WeeklyQuota(used: Int) {
     }
 }
 
-private val STEPS = listOf("applied" to "Applied", "shortlisted" to "Shortlisted", "referred" to "Referred",
-    "interview" to "Interview", "offer" to "Offer")
+/** Four stages, so each label has room under its dot on a 360dp phone. Interview sits between Referred and Offer. */
+private val STAGES = listOf("Applied", "Shortlisted", "Referred", "Offer")
 
 @Composable
 private fun ApplicationCard(app: MyApplication, busy: Boolean, onOpen: () -> Unit, onWithdraw: () -> Unit) {
@@ -158,56 +160,97 @@ private fun ApplicationCard(app: MyApplication, busy: Boolean, onOpen: () -> Uni
                     maxLines = 1, overflow = TextOverflow.Ellipsis,
                 )
             }
-            StatusPill(app.status, applicationStatusLabel(app.status))
-            // Withdraw is rarely needed, so it sits in the menu (also on the job screen).
+            // Withdraw is rarely needed, so it sits in the menu (also on the job screen), never as a red button.
             CardMenu(
-                if (app.canWithdraw) listOf(MenuAction("Withdraw", destructive = true, onClick = onWithdraw)) else emptyList(),
+                if (app.canWithdraw) listOf(MenuAction("Withdraw application", destructive = true, onClick = onWithdraw)) else emptyList(),
                 enabled = !busy,
             )
         }
+        StatusPill(app.status, applicationStatusLabel(app.status))
         Progress(app.status)
-        if (app.canReapply) {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                SmallButton("Apply again", onOpen, filled = true)   // the job screen has the reapply button
-            }
+        // Footer: when it last moved, and the way in
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                app.activityLabel,
+                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.weight(1f),
+            )
+            if (app.canReapply) SmallButton("Apply again", onOpen, filled = true)   // the job screen has the reapply button
+            else SmallButton("View details", onOpen)
         }
     }
 }
 
-/** Five dots joined by lines: how far along the referral is. Hidden for ended applications. */
+/**
+ * Applied → Shortlisted → Referred → Offer. Each label is centred under its dot (the first and last
+ * are kept inside the card). Interview fills half the line from Referred to Offer. Hidden for ended
+ * applications (declined, not selected, withdrawn).
+ */
 @Composable
 private fun Progress(status: String) {
     val reached = when (status) {
-        "applied", "waitlisted" -> 0
-        "shortlisted" -> 1
-        "referred" -> 2
-        "interview" -> 3
-        "offer" -> 4
-        else -> return      // declined, not selected, withdrawn: no progress bar
+        "applied", "waitlisted" -> 0f
+        "shortlisted" -> 1f
+        "referred" -> 2f
+        "interview" -> 2.5f
+        "offer" -> 3f
+        else -> return
     }
     val on = MaterialTheme.colorScheme.primary
-    val off = MaterialTheme.colorScheme.surfaceVariant
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            STEPS.indices.forEach { i ->
-                Box(
-                    Modifier.size(if (i == reached) 12.dp else 10.dp).clip(CircleShape)
-                        .background(if (i <= reached) (if (i == 4) MaterialTheme.extra.success else on) else off),
-                )
-                if (i < STEPS.lastIndex) {
-                    Box(Modifier.weight(1f).height(3.dp).background(if (i < reached) on else off))
+    val done = MaterialTheme.extra.success
+    val off = MaterialTheme.colorScheme.outline      // #CBD5E1 in light: upcoming stages stay visible
+    val current = kotlin.math.floor(reached).toInt()
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Canvas(Modifier.fillMaxWidth().height(14.dp)) {
+            val n = STAGES.size
+            val cell = size.width / n
+            val cy = size.height / 2
+            fun x(i: Float) = cell * (i + 0.5f)
+            // track, then the filled part
+            drawLine(off, Offset(x(0f), cy), Offset(x((n - 1).toFloat()), cy), strokeWidth = 3.dp.toPx(), cap = StrokeCap.Round)
+            if (reached > 0f) {
+                drawLine(on, Offset(x(0f), cy), Offset(x(reached), cy), strokeWidth = 3.dp.toPx(), cap = StrokeCap.Round)
+            }
+            for (i in 0 until n) {
+                val reachedDot = i <= current
+                val color = when {
+                    !reachedDot -> off
+                    i == n - 1 -> done
+                    else -> on
                 }
+                val r = if (i == current) 6.dp.toPx() else 5.dp.toPx()
+                drawCircle(color, radius = r, center = Offset(x(i.toFloat()), cy))
+                if (i == current && i != n - 1) drawCircle(Color.White, radius = 2.dp.toPx(), center = Offset(x(i.toFloat()), cy))
             }
         }
-        Row {
-            STEPS.forEachIndexed { i, (_, label) ->
-                Text(
-                    label,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = if (i <= reached) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.weight(1f),
-                    maxLines = 1,
-                )
+        CenteredLabels(STAGES) { i ->
+            Text(
+                STAGES[i],
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = if (i == current) FontWeight.Bold else FontWeight.Medium,
+                color = if (i <= current) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1, softWrap = false,
+            )
+        }
+    }
+}
+
+/** Places each label centred on its cell (same maths as the dots), nudged in at the edges. */
+@Composable
+private fun CenteredLabels(items: List<String>, label: @Composable (Int) -> Unit) {
+    Layout(
+        content = { items.indices.forEach { label(it) } },
+        modifier = Modifier.fillMaxWidth(),
+    ) { measurables, constraints ->
+        val width = constraints.maxWidth
+        val cell = width / items.size.toFloat()
+        val placeables = measurables.map { it.measure(Constraints(maxWidth = width)) }
+        val height = placeables.maxOfOrNull { it.height } ?: 0
+        layout(width, height) {
+            placeables.forEachIndexed { i, p ->
+                val centre = cell * (i + 0.5f)
+                val x = (centre - p.width / 2f).toInt().coerceIn(0, (width - p.width).coerceAtLeast(0))
+                p.placeRelative(x, 0)
             }
         }
     }

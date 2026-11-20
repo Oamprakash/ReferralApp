@@ -43,6 +43,13 @@ detailed, developer-facing history.
 - Colours: one teal tint for company avatars, selected chips, the Applied pill and the bottom-bar
   highlight; header avatar is an outlined circle instead of yellow; dark-mode header subtext 70% → 85% white.
 
+**Applied tab (design review)**
+- Progress is 4 stages, Applied → Shortlisted → Referred → Offer, each label centred under its dot;
+  Interview fills half the line to Offer. Upcoming stages use a darker grey so they stay visible.
+- Card footer shows when it last moved ("Applied 3d ago", "Referred yesterday", "Offer Nov 18") and
+  a quiet "View details". Withdraw stays in the ⋮ menu.
+- Weekly quota bar track is a clearer grey, so it reads as a bar at 0 of 10.
+
 ## 1.0.2 (versionCode 3)
 
 **User-facing**

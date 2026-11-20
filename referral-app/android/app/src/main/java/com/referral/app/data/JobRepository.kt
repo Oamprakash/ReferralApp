@@ -181,7 +181,7 @@ class JobRepository @Inject constructor(
 
     suspend fun myApplications(): List<MyApplication> =
         supabase.from("applications")
-            .select(Columns.raw("id, job_id, status, created_at, reapplied_at, jobs(title, status, companies(name))")) {
+            .select(Columns.raw("id, job_id, status, created_at, updated_at, reapplied_at, jobs(title, status, companies(name))")) {
                 filter { eq("seeker_id", uid()) }
                 order("created_at", Order.DESCENDING)
             }
