@@ -60,6 +60,7 @@ import com.referral.app.ui.common.VerifiedBadge
 import com.referral.app.ui.theme.Space
 import com.referral.app.ui.theme.extra
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import com.referral.app.links.JobLinks
 import com.referral.app.analytics.Analytics
