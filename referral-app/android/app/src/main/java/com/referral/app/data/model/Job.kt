@@ -226,12 +226,16 @@ data class JobMatch(
     val skillPoints: Int
         get() = (have.size + missing.size).let { total -> if (total == 0) 25 else Math.round(50.0 * have.size / total).toInt() }
 
-    /** Experience half, as in match_score: 50 in range, 30 within 1 year, 10 within 2, else 0. */
+    /**
+     * Experience half, as in match_score: 50 in range, 30 within 1 year, 25 if more than a year over
+     * (overqualified still fits), 10 if 2 years under, else 0.
+     */
     fun experiencePoints(years: Int?): Int = when {
         years == null -> 0
         years in expMin..expMax -> 50
         years in (expMin - 1)..(expMax + 1) -> 30
-        years in (expMin - 2)..(expMax + 2) -> 10
+        years > expMax + 1 -> 25
+        years >= expMin - 2 -> 10
         else -> 0
     }
 }

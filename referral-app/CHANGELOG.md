@@ -103,6 +103,8 @@ Play "What's new": `store/whatsnew/whatsnew-en-US`.
 - Bookmark in the top bar next to Share; 1dp line above the bottom bar instead of a shadow.
 
 **Small fixes**
+- Overqualified counts as half a fit: more than a year above the range scores 25/50 for experience (was 0).
+  Needs migration `20261123000000_overqualified_score.sql`.
 - Match colours in three tiers (MatchTier), no red: strong emerald-teal `#0F766E` (ring 65+, bar ≥70%), moderate amber
   (ring 40–64, bar 40–69%), low slate (below). Same on the score ring, the applicant match badge and the bars.
 - Best matches: the one-line summary hides while the score breakdown is open (no repeated text).
