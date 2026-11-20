@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
@@ -48,7 +49,8 @@ fun JobCard(
     badge: (@Composable () -> Unit)? = null,
     footer: (@Composable ColumnScope.() -> Unit)? = null,
 ) {
-    AppCard(onClick = onClick, modifier = modifier) {
+    // Own rhythm (16dp padding all round): header 12 → where/exp 8 → posted by 16 → salary/active
+    AppCard(onClick = onClick, modifier = modifier, spacing = 0.dp) {
         Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(Space.md)) {
             CompanyAvatar(company)
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Space.xs)) {
@@ -62,6 +64,7 @@ fun JobCard(
             }
             badge?.invoke()
         }
+        Spacer(Modifier.height(Space.md))
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.Filled.LocationOn, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(16.dp))
@@ -74,6 +77,7 @@ fun JobCard(
             )
         }
         poster?.let {
+            Spacer(Modifier.height(Space.sm))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Filled.CheckCircle, contentDescription = null, tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(16.dp))
@@ -85,6 +89,7 @@ fun JobCard(
             }
         }
         if (salary != null || freshness != null) {
+            Spacer(Modifier.height(Space.lg))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 salary?.let {
                     Text(it, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onSurface,
@@ -102,8 +107,10 @@ fun JobCard(
             }
         }
         footer?.let {
+            Spacer(Modifier.height(Space.lg))
             HorizontalDivider(color = MaterialTheme.extra.cardBorder)
-            it(this)
+            Spacer(Modifier.height(Space.md))
+            Column(verticalArrangement = Arrangement.spacedBy(Space.md)) { it(this) }
         }
     }
 }

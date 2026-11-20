@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -135,7 +136,7 @@ fun HomeScreen(
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(bottom = Space.xxl),
-            verticalArrangement = Arrangement.spacedBy(Space.cardGap),
+            verticalArrangement = Arrangement.spacedBy(Space.md),   // extra space per item below
         ) {
             item {
                 Header(
@@ -145,7 +146,7 @@ fun HomeScreen(
                 )
             }
             item {
-                ModeSwitch(bestMatches) { bestMatches = it }
+                Box(Modifier.padding(top = Space.xs)) { ModeSwitch(bestMatches) { bestMatches = it } }   // 16 below the header
             }
 
             if (bestMatches) {
@@ -153,7 +154,7 @@ fun HomeScreen(
                 return@LazyColumn
             }
 
-            item { Filters(ui, viewModel) }
+            item { Box(Modifier.padding(top = Space.xs)) { Filters(ui, viewModel) } }   // 16 below the switch
             when {
                 ui.loading -> item { LoadingBox(Modifier.padding(top = 60.dp)) }
                 ui.error != null -> item {
@@ -185,7 +186,7 @@ fun HomeScreen(
                                 ui.filter.isActive -> "${ui.jobs.size} matching roles"
                                 else -> "Latest openings"
                             },
-                            Modifier.padding(horizontal = Space.screen, vertical = Space.xs),
+                            Modifier.padding(start = Space.screen, end = Space.screen, top = Space.sm),   // 20 below the filters, 12 to the first card
                             action = { if (ui.filter.isActive) SmallButton("Clear", viewModel::clearFilters) },
                         )
                     }
@@ -200,7 +201,7 @@ fun HomeScreen(
                             salary = job.salaryRange,
                             freshness = job.activeLabel,
                             onClick = { onOpenJob(job.id, "Jobs") },
-                            modifier = Modifier.padding(horizontal = Space.screen),
+                            modifier = Modifier.padding(start = Space.screen, end = Space.screen, bottom = Space.xs),   // 16 between cards
                             poster = posterLine(ui.posters[job.id]),
                             badge = {
                                 if (applied) AppliedPill()
@@ -214,11 +215,15 @@ fun HomeScreen(
     }
 }
 
-/** "Posted by Priya · 12 referred". Null until the poster info has loaded. */
+/** "Arjun · Verified employee · 2 referrals": short enough not to cut off. Null until loaded. */
 private fun posterLine(p: JobPoster?): String? {
     p ?: return null
-    val who = p.firstName?.ifBlank { null }?.let { "Posted by $it, verified employee" } ?: "Posted by a verified employee"
-    return if (p.referred > 0) "$who · ${p.referred} referred" else who
+    val parts = listOfNotNull(
+        p.firstName?.ifBlank { null },
+        "Verified employee",
+        when (p.referred) { 0 -> null; 1 -> "1 referral"; else -> "${p.referred} referrals" },
+    )
+    return parts.joinToString(" · ")
 }
 
 @Composable
@@ -252,9 +257,10 @@ private fun Header(
         else -> "Good evening"
     }
     val x = MaterialTheme.extra
-    HeroHeader {
+    // Rhythm: greeting 4 → headline 8 → subtitle 16 → search, 20 below the search
+    HeroHeader(spacing = 0.dp, bottomPadding = 20.dp) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Column(Modifier.weight(1f)) {
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Space.xs)) {
                 Text(
                     ui.firstName?.let { "$greeting, $it" } ?: greeting,
                     style = MaterialTheme.typography.bodyMedium, color = x.onHeroMuted,
@@ -275,11 +281,13 @@ private fun Header(
                 )
             }
         }
+        Spacer(Modifier.height(Space.sm))
         Text(
             "Every role here is posted by someone who works there.",
-            style = MaterialTheme.typography.bodyMedium, color = x.onHeroMuted,
+            style = MaterialTheme.typography.bodyLarge, color = x.onHeroMuted,   // 16/24: two lines don't feel squashed
         )
         if (searchEnabled) {
+            Spacer(Modifier.height(Space.lg))
             TextField(
                 value = ui.filter.query,
                 onValueChange = viewModel::onQuery,
@@ -309,7 +317,6 @@ private fun Header(
                 modifier = Modifier.fillMaxWidth(),
             )
         }
-        Spacer(Modifier.size(Space.xs))
     }
 }
 
@@ -341,6 +348,7 @@ private fun chipColors(): SelectableChipColors {
     val c = MaterialTheme.colorScheme
     // A soft tint of the brand teal for selected chips, matching the bottom bar
     return FilterChipDefaults.filterChipColors(
+        containerColor = c.surface,
         selectedContainerColor = c.primary.copy(alpha = 0.12f),
         selectedLabelColor = c.primary,
         selectedLeadingIconColor = c.primary,
@@ -348,10 +356,12 @@ private fun chipColors(): SelectableChipColors {
     )
 }
 
+/** Every chip gets a light border so it reads as a tap target, not loose text. */
 @Composable
-private fun chipBorder(selected: Boolean): BorderStroke? = if (selected) {
-    BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.5f))
-} else null
+private fun chipBorder(selected: Boolean): BorderStroke = BorderStroke(
+    1.dp,
+    if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.5f) else MaterialTheme.colorScheme.outlineVariant,
+)
 
 /** Quick filters under the search box. The filter button in the search box opens all of them. */
 @Composable
