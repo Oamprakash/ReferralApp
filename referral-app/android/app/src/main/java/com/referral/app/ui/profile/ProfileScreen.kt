@@ -183,7 +183,7 @@ fun ProfileScreen(
                 enabled = ui.canSave, loading = ui.saving)
 
             if (showPrivacy) {
-                AppCard(contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = Space.sm)) {
+                AppCard(contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = Space.xs), spacing = 0.dp) {   // menu rows set their own padding
                     Text("Your data", style = MaterialTheme.typography.titleMedium,
                         modifier = Modifier.padding(start = Space.lg, end = Space.lg, top = Space.sm, bottom = Space.xs))
                     MenuRow(Icons.Filled.Share, if (ui.exporting) "Preparing…" else "Download my data",
@@ -199,7 +199,7 @@ fun ProfileScreen(
                 }
             }
             if (isTab) {
-                AppCard(contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = Space.sm)) {
+                AppCard(contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = Space.xs), spacing = 0.dp) {   // menu rows set their own padding
                     MenuRow(Icons.Filled.Info, "How the app works", "Tips for seekers and referrers", onClick = onHowItWorks)
                     HorizontalDivider(color = MaterialTheme.extra.cardBorder)
                     onPostJob?.let {
