@@ -90,7 +90,7 @@ fun MyPostsScreen(
         }
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(padding),
-            contentPadding = PaddingValues(start = Space.screen, end = Space.screen, top = Space.lg, bottom = 96.dp)   // last card scrolls clear of the floating button,
+            contentPadding = PaddingValues(start = Space.screen, end = Space.screen, top = Space.lg, bottom = 96.dp),   // last card scrolls clear of the floating button
             verticalArrangement = Arrangement.spacedBy(Space.cardGap),
         ) {
             item { ImpactCard(ui) }
