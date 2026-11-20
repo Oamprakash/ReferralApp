@@ -157,7 +157,7 @@ private fun DetailBody(job: JobDetail, ui: JobDetailUiState, modifier: Modifier,
                 )
             }
         }
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.sm), verticalArrangement = Arrangement.spacedBy(Space.sm)) {
             MetaPill(job.location, icon = Icons.Filled.LocationOn)
             MetaPill(job.experienceLabel)
             MetaPill(job.workModeLabel)
@@ -216,7 +216,7 @@ private fun DetailBody(job: JobDetail, ui: JobDetailUiState, modifier: Modifier,
         if (job.skills.isNotEmpty()) {
             Column(verticalArrangement = Arrangement.spacedBy(Space.sm)) {
                 Text("Skills", style = MaterialTheme.typography.titleMedium)
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.sm), verticalArrangement = Arrangement.spacedBy(Space.sm)) {
                     job.skills.forEach { Pill(it, MaterialTheme.colorScheme.secondaryContainer, MaterialTheme.colorScheme.onSecondaryContainer) }
                 }
             }

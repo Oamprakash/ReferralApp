@@ -88,7 +88,7 @@ fun MyPostsScreen(
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(padding),
             contentPadding = PaddingValues(start = Space.screen, end = Space.screen, top = Space.sm, bottom = Space.xxl),
-            verticalArrangement = Arrangement.spacedBy(Space.md),
+            verticalArrangement = Arrangement.spacedBy(Space.cardGap),
         ) {
             item { ImpactCard(ui) }
             ui.error?.let { msg -> item { Banner(msg, Tone.ERROR) } }
@@ -190,11 +190,11 @@ private fun PostCard(
 
     AppCard(onClick = onApplicants) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Column(Modifier.weight(1f)) {
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Space.xs)) {
                 Text(post.title, style = MaterialTheme.typography.titleMedium)
                 Text(
                     if (look.label == "Live") "${post.location} · confirmed ${post.confirmedDaysAgo}d ago" else post.location,
-                    style = MaterialTheme.typography.bodySmall, color = c.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodyMedium, color = c.onSurfaceVariant,
                 )
             }
             Pill(look.label, look.bg, look.fg)
@@ -212,7 +212,7 @@ private fun PostCard(
             }
         }
         look.note?.let {
-            Text(it, style = MaterialTheme.typography.bodySmall,
+            Text(it, style = MaterialTheme.typography.bodyMedium,
                 color = if (look.label == "Confirm soon") x.warning else c.onSurfaceVariant)
             HorizontalDivider(color = x.cardBorder)
         }

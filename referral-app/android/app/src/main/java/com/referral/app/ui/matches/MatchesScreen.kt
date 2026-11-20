@@ -106,7 +106,7 @@ private fun MatchCard(m: JobMatch, myYears: Int?, onClick: () -> Unit, modifier:
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     matchSummary(m, myYears),
-                    style = MaterialTheme.typography.bodySmall,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.weight(1f),
                 )
@@ -116,7 +116,7 @@ private fun MatchCard(m: JobMatch, myYears: Int?, onClick: () -> Unit, modifier:
                 ScoreBar("Skills", m.skillPoints, skillsCaption(m))
                 ScoreBar("Experience", m.experiencePoints(myYears), experienceCaption(m, myYears))
                 if (m.have.isNotEmpty() || m.missing.isNotEmpty()) {
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.sm), verticalArrangement = Arrangement.spacedBy(Space.sm)) {
                         m.have.forEach { Pill("✓ $it", MaterialTheme.extra.successContainer, MaterialTheme.extra.onSuccessContainer) }
                         m.missing.forEach { Pill(it, MaterialTheme.colorScheme.surfaceVariant, MaterialTheme.colorScheme.onSurfaceVariant) }
                     }
@@ -134,7 +134,7 @@ private fun ScoreBar(label: String, points: Int, caption: String) {
         points >= 20 -> MaterialTheme.extra.warning
         else -> MaterialTheme.colorScheme.error
     }
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(Space.xs)) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Text(label, style = MaterialTheme.typography.labelMedium, modifier = Modifier.weight(1f))
             Text("$points/50", style = MaterialTheme.typography.labelMedium.tabular(), color = color)

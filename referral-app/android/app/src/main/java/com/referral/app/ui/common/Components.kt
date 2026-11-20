@@ -125,7 +125,7 @@ fun AppCard(
     val border = BorderStroke(1.dp, MaterialTheme.extra.cardBorder)
     val elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     val inner: @Composable ColumnScope.() -> Unit = {
-        Column(Modifier.padding(contentPadding), verticalArrangement = Arrangement.spacedBy(Space.sm), content = content)
+        Column(Modifier.padding(contentPadding), verticalArrangement = Arrangement.spacedBy(Space.md), content = content)
     }
     if (onClick != null) {
         Card(onClick = onClick, modifier = modifier.fillMaxWidth(), shape = MaterialTheme.shapes.large,
@@ -247,7 +247,7 @@ fun SmallButton(
 ) {
     val color = if (destructive) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
     val content: @Composable RowScope.() -> Unit = {
-        icon?.let { Icon(it, contentDescription = null, modifier = Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)) }
+        icon?.let { Icon(it, contentDescription = null, modifier = Modifier.size(20.dp)); Spacer(Modifier.width(Space.sm)) }
         Text(text, style = MaterialTheme.typography.labelLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
     when {
@@ -288,11 +288,11 @@ fun Pill(
         modifier
             .clip(CircleShape)
             .background(container)
-            .padding(horizontal = 10.dp, vertical = 5.dp),
+            .padding(horizontal = Space.md, vertical = Space.xs),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        icon?.let { Icon(it, contentDescription = null, tint = content, modifier = Modifier.size(14.dp)) }
+        icon?.let { Icon(it, contentDescription = null, tint = content, modifier = Modifier.size(16.dp)) }
         Text(text, style = MaterialTheme.typography.labelMedium, color = content, maxLines = 1)
     }
 }
@@ -379,7 +379,7 @@ fun Banner(text: String, tone: Tone = Tone.INFO, modifier: Modifier = Modifier, 
     Surface(color = bg, shape = MaterialTheme.shapes.medium, modifier = modifier.fillMaxWidth()) {
         Column(Modifier.padding(Space.md)) {
             Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(Space.sm)) {
-                Icon(icon, contentDescription = null, tint = fg, modifier = Modifier.size(18.dp).padding(top = 1.dp))
+                Icon(icon, contentDescription = null, tint = fg, modifier = Modifier.size(20.dp))
                 Text(text, style = MaterialTheme.typography.bodyMedium, color = fg, modifier = Modifier.weight(1f))
             }
             action?.let { Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) { it() } }
@@ -392,7 +392,7 @@ fun Banner(text: String, tone: Tone = Tone.INFO, modifier: Modifier = Modifier, 
 fun StatTile(value: String, label: String, modifier: Modifier = Modifier, onHero: Boolean = false) {
     val fg = if (onHero) MaterialTheme.extra.onHero else MaterialTheme.colorScheme.onSurface
     val muted = if (onHero) MaterialTheme.extra.onHeroMuted else MaterialTheme.colorScheme.onSurfaceVariant
-    Column(modifier) {
+    Column(modifier, verticalArrangement = Arrangement.spacedBy(Space.xs)) {
         Text(value, style = MaterialTheme.typography.headlineSmall.tabular(), color = fg)
         Text(label, style = MaterialTheme.typography.labelMedium, color = muted)
     }
