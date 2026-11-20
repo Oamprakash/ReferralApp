@@ -103,8 +103,8 @@ Play "What's new": `store/whatsnew/whatsnew-en-US`.
 - Bookmark in the top bar next to Share; 1dp line above the bottom bar instead of a shadow.
 
 **Small fixes**
-- Match colours: score ring and badge green from 60, teal from 30, grey below; score bars green at 50% or more
-  (e.g. 3 of 4 skills), grey below (1 or 2 of 5). No amber or red (the dark amber read as red).
+- Match colours in three tiers (MatchTier), no red: strong green (ring 65+, bar ≥70%), moderate amber
+  (ring 40–64, bar 40–69%), low slate (below). Same on the score ring, the applicant match badge and the bars.
 - Profile menu cards no longer get extra gaps between rows (#33).
 - 4dp between a screen title and its subtitle (#34).
 - My posts status pill lines up with the title's first line (#35).

@@ -29,7 +29,9 @@ import com.referral.app.ui.common.EmptyState
 import com.referral.app.ui.common.JobCard
 import com.referral.app.ui.common.LoadingBox
 import com.referral.app.ui.common.Pill
+import com.referral.app.ui.common.MatchTier
 import com.referral.app.ui.common.ScoreRing
+import com.referral.app.ui.common.colors
 import com.referral.app.ui.theme.tabular
 import com.referral.app.ui.common.SmallButton
 import com.referral.app.ui.common.Tone
@@ -129,19 +131,18 @@ private fun MatchCard(m: JobMatch, myYears: Int?, onClick: () -> Unit, modifier:
 /** One half of the score: label, points out of 50, a bar, and why. */
 @Composable
 private fun ScoreBar(label: String, points: Int, caption: String) {
-    // By share of the 50 points: half or more is green (3 of 4 skills = 75%); under half is grey
-    // (1 or 2 of 5 skills = 20–40%). No red or amber: a gap isn't an error.
-    val color = if (points * 2 >= 50) MaterialTheme.extra.success else MaterialTheme.colorScheme.onSurfaceVariant
+    // Tier by share of the 50 points: ≥70% green, ≥40% amber, below slate (see MatchTier)
+    val t = MatchTier.ofPoints(points).colors()
     Column(verticalArrangement = Arrangement.spacedBy(Space.xs)) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Text(label, style = MaterialTheme.typography.labelMedium, modifier = Modifier.weight(1f))
-            Text("$points/50", style = MaterialTheme.typography.labelMedium.tabular(), color = color)
+            Text("$points/50", style = MaterialTheme.typography.labelMedium.tabular(), color = t.text)
         }
         LinearProgressIndicator(
             progress = { points / 50f },
             modifier = Modifier.fillMaxWidth(),
-            color = color,
-            trackColor = MaterialTheme.colorScheme.surfaceVariant,
+            color = t.bar,
+            trackColor = t.track,
             strokeCap = StrokeCap.Round,
             gapSize = 0.dp,
             drawStopIndicator = {},

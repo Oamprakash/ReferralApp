@@ -310,18 +310,11 @@ fun MetaPill(text: String, icon: ImageVector? = null) =
 fun VerifiedBadge(text: String = "Verified employee") =
     Pill(text, MaterialTheme.extra.successContainer, MaterialTheme.extra.onSuccessContainer, icon = Icons.Filled.CheckCircle)
 
-/**
- * Match score: green from 60 (a good fit), teal from 30 (partial), neutral below.
- * No amber/red: the dark amber read as red and made decent matches look like warnings.
- */
+/** Match score pill, coloured by [MatchTier] (strong green, moderate amber, low slate). */
 @Composable
 fun MatchBadge(score: Int, modifier: Modifier = Modifier) {
-    val (bg, fg) = when {
-        score >= 60 -> MaterialTheme.extra.successContainer to MaterialTheme.extra.onSuccessContainer
-        score >= 30 -> MaterialTheme.colorScheme.primary.copy(alpha = 0.12f) to MaterialTheme.colorScheme.primary
-        else -> MaterialTheme.colorScheme.surfaceVariant to MaterialTheme.colorScheme.onSurfaceVariant
-    }
-    Pill("$score% match", bg, fg, modifier)
+    val t = MatchTier.ofScore(score).colors()
+    Pill("$score% match", t.track, t.text, modifier)
 }
 
 /** Application status colours, so a list of applications can be scanned at a glance. */
@@ -408,17 +401,13 @@ fun StatTile(value: String, label: String, modifier: Modifier = Modifier, onHero
 /** Score ring for match cards. */
 @Composable
 fun ScoreRing(score: Int, size: Dp = 52.dp) {
-    // Same bands as MatchBadge: green from 60, teal from 30, grey below
-    val color = when {
-        score >= 60 -> MaterialTheme.extra.success
-        score >= 30 -> MaterialTheme.colorScheme.primary
-        else -> MaterialTheme.colorScheme.onSurfaceVariant
-    }
+    val t = MatchTier.ofScore(score).colors()   // strong 65+, moderate 40+, low below
+    val color = t.bar
     Box(Modifier.size(size), contentAlignment = Alignment.Center) {
         CircularProgressIndicator(
             progress = { 1f },
             modifier = Modifier.size(size),
-            color = MaterialTheme.colorScheme.surfaceVariant,
+            color = t.track,
             strokeWidth = 5.dp,
         )
         CircularProgressIndicator(
@@ -428,7 +417,7 @@ fun ScoreRing(score: Int, size: Dp = 52.dp) {
             strokeWidth = 5.dp,
             strokeCap = StrokeCap.Round,
         )
-        Text("$score", style = MaterialTheme.typography.titleSmall.tabular(), fontWeight = FontWeight.ExtraBold)
+        Text("$score", style = MaterialTheme.typography.titleSmall.tabular(), fontWeight = FontWeight.ExtraBold, color = t.text)
     }
 }
 
