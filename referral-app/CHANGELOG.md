@@ -4,7 +4,9 @@ Release notes shown to testers and users on Google Play live in `store/whatsnew/
 (max 500 characters). The release workflow uploads that file with each build. This file is the
 detailed, developer-facing history.
 
-## Unreleased (next: versionCode 4+)
+## 1.0.3 (versionCode 4)
+
+Play "What's new": `store/whatsnew/whatsnew-en-US`.
 
 **From closed-testing feedback**
 - "My posts" tab only for people who have verified a work email; job seekers see 4 tabs. Profile has
@@ -99,6 +101,11 @@ detailed, developer-facing history.
 - "View on careers page" uses an open-in-new icon; "1 short question" / "2 short questions".
 - Skills in a card: your skills green with ✓, the rest grey, plus "You have 3 of 5".
 - Bookmark in the top bar next to Share; 1dp line above the bottom bar instead of a shadow.
+
+**Small fixes**
+- Profile menu cards no longer get extra gaps between rows (#33).
+- 4dp between a screen title and its subtitle (#34).
+- My posts status pill lines up with the title's first line (#35).
 
 **Profile spacing**
 - 16dp from the header to the first card and between cards; summary card 16dp padding.
