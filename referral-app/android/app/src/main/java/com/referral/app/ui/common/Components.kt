@@ -316,17 +316,14 @@ fun StatusPill(status: String?, label: String) {
     Pill(label, bg, fg)
 }
 
-/** Rounded square with the company's initials in a colour picked from its name. */
+/** Rounded square with the company's initials, in the brand tint. */
 @Composable
 fun CompanyAvatar(name: String?, size: Dp = 44.dp) {
     val initials = name.orEmpty().split(' ', '-', '.').filter { it.isNotBlank() }
         .take(2).joinToString("") { it.first().uppercase() }.ifEmpty { "?" }
-    val palette = listOf(
-        Color(0xFF0F766E) to Color(0xFFCCF5EF), Color(0xFF1E3A8A) to Color(0xFFDDE5FF),
-        Color(0xFFB45309) to Color(0xFFFEF3C7), Color(0xFF7C3AED) to Color(0xFFEDE9FE),
-        Color(0xFFBE123C) to Color(0xFFFFE4E6), Color(0xFF0369A1) to Color(0xFFE0F2FE),
-    )
-    val (fg, bg) = palette[(name.orEmpty().hashCode() and 0x7fffffff) % palette.size]
+    // One brand tint for every company, so a list of cards doesn't turn into a rainbow
+    val fg = MaterialTheme.colorScheme.primary
+    val bg = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
     Box(
         Modifier.size(size).clip(RoundedCornerShape(size * 0.3f)).background(bg),
         contentAlignment = Alignment.Center,

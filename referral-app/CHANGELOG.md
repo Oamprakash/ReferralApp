@@ -33,6 +33,16 @@ detailed, developer-facing history.
 - My posts: stats as one line; "Still hiring" shows on the card only when the post needs it; Share, Close and Still hiring otherwise in the ⋮ menu.
 - Applicants: 3 skills + "+N"; the next step, Resume and Contact stay visible; Decline/Not selected and Report in the ⋮ menu.
 
+**Jobs tab redesign (design review)**
+- "For you" merged into Jobs as **All jobs | Best matches**; bottom bar is now Jobs, Applied, (My posts), Profile.
+- Each card shows who posted it: "Posted by Priya, verified employee · 12 referred" (needs migration
+  `20261121000000_job_posters.sql`; without it the line is just hidden).
+- Bookmark on each card; **Saved** filter lists them (stored on the phone, up to 100).
+- Search covers role, skill and company. Filter button in the search box opens all filters in a sheet.
+- Freshness as a green dot + "Active 7d ago".
+- Colours: one teal tint for company avatars, selected chips, the Applied pill and the bottom-bar
+  highlight; header avatar is an outlined circle instead of yellow; dark-mode header subtext 70% → 85% white.
+
 ## 1.0.2 (versionCode 3)
 
 **User-facing**

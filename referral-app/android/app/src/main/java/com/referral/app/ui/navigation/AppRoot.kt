@@ -11,7 +11,6 @@ import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -44,7 +43,6 @@ import com.referral.app.ui.auth.SignInScreen
 import com.referral.app.ui.auth.SuspendedScreen
 import com.referral.app.ui.home.HomeScreen
 import com.referral.app.ui.onboarding.OnboardingScreen
-import com.referral.app.ui.matches.MatchesScreen
 import com.referral.app.ui.profile.ProfileScreen
 import com.referral.app.ui.referrer.ApplicantsScreen
 import com.referral.app.ui.referrer.MyPostsScreen
@@ -67,7 +65,6 @@ import com.referral.app.links.PendingJobLink
 @Serializable data class ApplyRoute(val jobId: String)
 @Serializable data class ApplicantsRoute(val jobId: String)
 @Serializable data object AdminRoute
-@Serializable data object MatchesRoute
 @Serializable data object HowItWorksRoute
 
 @Composable
@@ -85,7 +82,7 @@ fun AppRoot(viewModel: RootViewModel = hiltViewModel()) {
     }
 }
 
-/** The five bottom tabs. Each keeps its own scroll/back stack when you switch away and back. */
+/** The bottom tabs ("For you" is now the Best matches view inside Jobs). Each keeps its own scroll/back stack when you switch away and back. */
 private enum class Tab(
     val label: String,
     val icon: ImageVector,
@@ -93,7 +90,6 @@ private enum class Tab(
     val isAt: (NavDestination) -> Boolean,      // reified hasRoute: safe with R8 renaming classes
 ) {
     JOBS("Jobs", Icons.Filled.Home, HomeRoute, { it.hasRoute<HomeRoute>() }),
-    MATCHES("For you", Icons.Filled.Star, MatchesRoute, { it.hasRoute<MatchesRoute>() }),
     APPLIED("Applied", Icons.AutoMirrored.Filled.List, MyApplicationsRoute, { it.hasRoute<MyApplicationsRoute>() }),
     POSTS("My posts", Icons.Filled.Create, MyPostsRoute, { it.hasRoute<MyPostsRoute>() }),
     PROFILE("Profile", Icons.Filled.Person, ProfileRoute(), { it.hasRoute<ProfileRoute>() }),
@@ -133,7 +129,7 @@ private fun SignedInGraph(
     }
     val isProfileTab = dest?.hasRoute<ProfileRoute>() == true &&
         entry?.toRoute<ProfileRoute>()?.returnAfterSave == false && nav.previousBackStackEntry != null
-    val showBar = isProfileTab || listOf(Tab.JOBS, Tab.MATCHES, Tab.APPLIED, Tab.POSTS).any { tab ->
+    val showBar = isProfileTab || listOf(Tab.JOBS, Tab.APPLIED, Tab.POSTS).any { tab ->
         dest?.hierarchy?.any { d -> tab.isAt(d) } == true
     }
 
@@ -153,7 +149,7 @@ private fun SignedInGraph(
                             colors = NavigationBarItemDefaults.colors(
                                 selectedIconColor = MaterialTheme.colorScheme.primary,
                                 selectedTextColor = MaterialTheme.colorScheme.primary,
-                                indicatorColor = MaterialTheme.colorScheme.primaryContainer,
+                                indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),   // soft brand teal
                             ),
                         )
                     }
@@ -189,15 +185,9 @@ private fun SignedInGraph(
             }
             composable<HomeRoute> {
                 HomeScreen(
-                    onOpenJob = { id -> openJob(id, "Jobs") },
-                    onMatches = { nav.switchTab(Tab.MATCHES) },
-                    onProfile = { nav.switchTab(Tab.PROFILE) },
-                )
-            }
-            composable<MatchesRoute> {
-                MatchesScreen(
-                    onOpenJob = { id -> openJob(id, "ForYou") },
+                    onOpenJob = { id, from -> openJob(id, from) },
                     onEditProfile = { nav.navigate(ProfileRoute(returnAfterSave = true)) },
+                    onProfile = { nav.switchTab(Tab.PROFILE) },
                 )
             }
             composable<MyApplicationsRoute> {
@@ -262,7 +252,6 @@ private fun SignedInGraph(
 /** Readable analytics screen names, matched by type so they survive R8. */
 private fun screenName(d: NavDestination): String? = when {
     d.hasRoute<HomeRoute>() -> "Jobs"
-    d.hasRoute<MatchesRoute>() -> "ForYou"
     d.hasRoute<MyApplicationsRoute>() -> "Applied"
     d.hasRoute<MyPostsRoute>() -> "MyPosts"
     d.hasRoute<ProfileRoute>() -> "Profile"

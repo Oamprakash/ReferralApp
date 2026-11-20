@@ -84,7 +84,7 @@ private val pages = listOf(
         title = "Upload your resume, see your best matches",
         body = "Your resume fills in your profile on your phone. Open roles are then ranked by how well your skills and experience fit.",
         tips = listOf(
-            "Open the For you tab to see your score for each role and the skills you're missing",
+            "In Jobs, switch to Best matches to see your score for each role and the skills you're missing",
             "Keep your skills and years up to date; referrers see the same score",
         ),
         art = { MatchArt() },
