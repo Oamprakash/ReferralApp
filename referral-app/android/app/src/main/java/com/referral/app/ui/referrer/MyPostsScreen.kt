@@ -169,7 +169,7 @@ private fun PostCard(
 ) {
     val x = MaterialTheme.extra
     val c = MaterialTheme.colorScheme
-    val daysLeft = (14 - post.confirmedDaysAgo).coerceAtLeast(1)
+    val daysLeft = (14 - post.confirmedDaysAgo.toInt()).coerceAtLeast(1)
     val look = when {
         post.hiddenReason == "admin" -> StatusLook("Removed", c.errorContainer, c.onErrorContainer, "Removed by moderators after review.")
         post.hiddenReason == "reports" -> StatusLook("Under review", c.errorContainer, c.onErrorContainer, "Hidden after reports from users. We'll notify you.")
