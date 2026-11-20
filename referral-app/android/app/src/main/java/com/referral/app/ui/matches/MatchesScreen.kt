@@ -36,6 +36,7 @@ import com.referral.app.ui.common.JobCard
 import com.referral.app.ui.common.LoadingBox
 import com.referral.app.ui.common.Pill
 import com.referral.app.ui.common.ScoreRing
+import com.referral.app.ui.theme.tabular
 import com.referral.app.ui.common.SmallButton
 import com.referral.app.ui.common.Tone
 import com.referral.app.ui.theme.Space
@@ -147,7 +148,7 @@ private fun ScoreBar(label: String, points: Int, caption: String) {
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Text(label, style = MaterialTheme.typography.labelMedium, modifier = Modifier.weight(1f))
-            Text("$points/50", style = MaterialTheme.typography.labelMedium, color = color)
+            Text("$points/50", style = MaterialTheme.typography.labelMedium.tabular(), color = color)
         }
         LinearProgressIndicator(
             progress = { points / 50f },

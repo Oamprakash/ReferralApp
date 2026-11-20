@@ -21,6 +21,11 @@ detailed, developer-facing history.
   or a referrer has referred someone. At most once every 90 days; Play may show nothing.
 - Analytics: `share` (`method` seeker/referrer), `review_prompt` (`reason`), `open_job` with `from = Link`.
 
+**Readability**
+- Light mode: softer white text on the teal header raised from 80% to 90% opacity (contrast 4.1:1 → about 4.9:1).
+- Small labels (bottom tabs, badges) 11sp → 12sp.
+- Numbers in stat tiles, score rings and score bars use same-width digits so they line up.
+
 ## 1.0.2 (versionCode 3)
 
 **User-facing**
