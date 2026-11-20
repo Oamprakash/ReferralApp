@@ -135,7 +135,7 @@ fun HomeScreen(
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(bottom = Space.xxl),
-            verticalArrangement = Arrangement.spacedBy(Space.md),
+            verticalArrangement = Arrangement.spacedBy(Space.cardGap),
         ) {
             item {
                 Header(
@@ -309,7 +309,7 @@ private fun Header(
                 modifier = Modifier.fillMaxWidth(),
             )
         }
-        Spacer(Modifier.size(2.dp))
+        Spacer(Modifier.size(Space.xs))
     }
 }
 

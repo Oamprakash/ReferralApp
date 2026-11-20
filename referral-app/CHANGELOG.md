@@ -59,6 +59,14 @@ detailed, developer-facing history.
   Still hiring (or Verify again) is the filled one. Close is in the ⋮ menu next to the status pill.
 - Divider between the status note and the applicant counts; bottom-tab labels kept to one line.
 
+**Spacing and readability (all cards)**
+- Spacing on an 8dp grid with 4dp steps: 4 between a title and its subtitle, 8 between items in a row,
+  12 between groups in a card (was 8), 16 card padding, between cards (was 12) and at the screen edges (was 20).
+- Line heights on the 4dp grid (titles 24/28, body 20, small 16).
+- Secondary lines in cards (company, location, experience, status notes, match summary) 12sp → 14sp;
+  12sp is kept for timestamps, badges and tab labels.
+- Pills 12×4 padding, chip rows 8dp apart, icons 16/20dp.
+
 ## 1.0.2 (versionCode 3)
 
 **User-facing**

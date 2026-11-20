@@ -104,7 +104,7 @@ fun ApplicantsScreen(
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(horizontal = Space.screen, vertical = Space.md),
-                verticalArrangement = Arrangement.spacedBy(Space.md),
+                verticalArrangement = Arrangement.spacedBy(Space.cardGap),
             ) {
                 ui.error?.let { msg -> item { Banner(msg, Tone.ERROR) } }
                 ui.message?.let { msg -> item { Banner(msg, Tone.SUCCESS) } }
@@ -213,18 +213,18 @@ private fun ApplicantCard(
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.md)) {
             PersonAvatar(p?.fullName, size = 44.dp,
                 container = MaterialTheme.colorScheme.secondaryContainer, content = MaterialTheme.colorScheme.onSecondaryContainer)
-            Column(Modifier.weight(1f)) {
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Space.xs)) {
                 Text(p?.fullName ?: "Applicant", style = MaterialTheme.typography.titleMedium)
                 Text(
                     listOfNotNull(p?.experienceYears?.let { "$it yrs" }, p?.city).joinToString(" · "),
-                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
             applicant.matchScore?.let { MatchBadge(it) }
         }
         StatusPill(applicant.status, applicationStatusLabel(applicant.status))
         if (!p?.skills.isNullOrEmpty()) {
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.sm), verticalArrangement = Arrangement.spacedBy(Space.sm)) {
                 // A few skills at a glance; the resume has the rest.
                 p!!.skills.take(3).forEach {
                     Pill(it, MaterialTheme.colorScheme.surfaceVariant, MaterialTheme.colorScheme.onSurfaceVariant)
@@ -239,7 +239,7 @@ private fun ApplicantCard(
             SmallButton(if (showAnswers) "Hide answers" else "Show answers (${applicant.answers.size})", { showAnswers = !showAnswers })
             if (showAnswers) {
                 applicant.answers.forEachIndexed { i, ans ->
-                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Column(verticalArrangement = Arrangement.spacedBy(Space.xs)) {
                         Text(questions.getOrNull(i) ?: "Question ${i + 1}", style = MaterialTheme.typography.labelLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant)
                         Text(ans, style = MaterialTheme.typography.bodyMedium)

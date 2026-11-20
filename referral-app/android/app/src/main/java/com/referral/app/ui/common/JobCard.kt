@@ -51,7 +51,7 @@ fun JobCard(
     AppCard(onClick = onClick, modifier = modifier) {
         Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(Space.md)) {
             CompanyAvatar(company)
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Space.xs)) {
                 Text(title, style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 Text(
                     company,
@@ -95,7 +95,7 @@ fun JobCard(
                 freshness?.let {
                     // Green dot + short text: scannable, and leaves room for the salary on small phones
                     Box(Modifier.size(8.dp).clip(CircleShape).background(MaterialTheme.extra.success))
-                    Spacer(Modifier.width(6.dp))
+                    Spacer(Modifier.width(Space.sm))
                     Text(it, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1)
                 }

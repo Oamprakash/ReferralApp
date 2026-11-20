@@ -110,7 +110,7 @@ fun ApplyScreen(
                 if (job.questions.isNotEmpty()) {
                     Text("A few quick questions", style = MaterialTheme.typography.titleMedium)
                     job.questions.forEachIndexed { i, q ->
-                        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Column(verticalArrangement = Arrangement.spacedBy(Space.sm)) {
                             Text("${i + 1}. $q", style = MaterialTheme.typography.titleSmall)
                             OutlinedTextField(
                                 value = ui.answers.getOrElse(i) { "" },

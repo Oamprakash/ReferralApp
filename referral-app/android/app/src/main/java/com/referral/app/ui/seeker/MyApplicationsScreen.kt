@@ -87,7 +87,7 @@ fun MyApplicationsScreen(
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(padding),
             contentPadding = PaddingValues(horizontal = Space.screen, vertical = Space.sm),
-            verticalArrangement = Arrangement.spacedBy(Space.md),
+            verticalArrangement = Arrangement.spacedBy(Space.cardGap),
         ) {
             item { WeeklyQuota(ui.usedThisWeek) }
             ui.error?.let { msg -> item { Banner(msg, Tone.ERROR) } }
@@ -138,7 +138,7 @@ private fun WeeklyQuota(used: Int) {
         )
         Text(
             "The weekly limit keeps referrers' inboxes manageable, so they actually read each one.",
-            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
 }
@@ -152,11 +152,11 @@ private fun ApplicationCard(app: MyApplication, busy: Boolean, onOpen: () -> Uni
     AppCard(onClick = onOpen) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.md)) {
             CompanyAvatar(company, size = 40.dp)
-            Column(Modifier.weight(1f)) {
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Space.xs)) {
                 Text(app.job?.title ?: "Job", style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Text(
                     listOfNotNull(company, if (app.job?.status == "closed") "role closed" else null).joinToString(" · "),
-                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1, overflow = TextOverflow.Ellipsis,
                 )
             }
@@ -200,8 +200,8 @@ private fun Progress(status: String) {
     val done = MaterialTheme.extra.success
     val off = MaterialTheme.colorScheme.outline      // #CBD5E1 in light: upcoming stages stay visible
     val current = kotlin.math.floor(reached).toInt()
-    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        Canvas(Modifier.fillMaxWidth().height(14.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(Space.sm)) {
+        Canvas(Modifier.fillMaxWidth().height(16.dp)) {
             val n = STAGES.size
             val cell = size.width / n
             val cy = size.height / 2
