@@ -91,6 +91,7 @@ detailed, developer-facing history.
 - Live post with no applicants: Share is the filled button, "Applicants (0)" outlined.
 - "Auto-hides in N days" shows in a soft amber callout.
 - Post a job button shrinks to "+" once you scroll.
+- "Your impact" card ~36dp shorter: 16dp padding, active-posts pill on the title row.
 
 ## 1.0.2 (versionCode 3)
 

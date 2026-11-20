@@ -152,16 +152,20 @@ private data class StatusLook(
 private fun ImpactCard(ui: MyPostsUiState) {
     val st = ui.stats
     Column(
-        Modifier.fillMaxWidth().clip(MaterialTheme.shapes.large).background(MaterialTheme.extra.heroGradient).padding(Space.xl),
+        // Compact: 16dp padding, and the active-posts pill shares the title row instead of its own
+        Modifier.fillMaxWidth().clip(MaterialTheme.shapes.large).background(MaterialTheme.extra.heroGradient).padding(Space.lg),
         verticalArrangement = Arrangement.spacedBy(Space.md),
     ) {
-        Text("Your impact", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.extra.onHeroMuted)
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Text("Your impact", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.extra.onHeroMuted,
+                modifier = Modifier.weight(1f))
+            Pill("${ui.activeCount} of 5 active posts", MaterialTheme.extra.accent, MaterialTheme.extra.onAccent)
+        }
         Row(Modifier.fillMaxWidth()) {
             StatTile("${st?.referred ?: 0}", "Referred", Modifier.weight(1f), onHero = true)
             StatTile("${st?.interviews ?: 0}", "Interviews", Modifier.weight(1f), onHero = true)
             StatTile("${st?.offers ?: 0}", "Offers", Modifier.weight(1f), onHero = true)
         }
-        Pill("${ui.activeCount} of 5 active posts", MaterialTheme.extra.accent, MaterialTheme.extra.onAccent)
     }
 }
 
