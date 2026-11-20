@@ -32,6 +32,7 @@ import androidx.navigation.toRoute
 import com.referral.app.analytics.Analytics
 import com.referral.app.ui.common.LoadingBox
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.compose.NavHost
@@ -110,6 +111,11 @@ private fun SignedInGraph(
     val nav = rememberNavController()
     val showPosts by tabsViewModel.showPosts.collectAsStateWithLifecycle()
     val tabs = Tab.entries.filter { it != Tab.POSTS || showPosts }
+    // Verification can expire while the app is open: re-check whenever it comes back to the front
+    LifecycleResumeEffect(Unit) {
+        tabsViewModel.refresh()
+        onPauseOrDispose { }
+    }
     val entry by nav.currentBackStackEntryAsState()
     val dest = entry?.destination
     // One screen_view per navigation (re-opening a tab counts again). Names are explicit because R8
@@ -132,6 +138,10 @@ private fun SignedInGraph(
     val showBar = isProfileTab || listOf(Tab.JOBS, Tab.APPLIED, Tab.POSTS).any { tab ->
         dest?.hierarchy?.any { d -> tab.isAt(d) } == true
     }
+    // Tab just disappeared (verification expired) while it was open: go to Jobs
+    LaunchedEffect(showPosts, dest) {
+        if (!showPosts && dest?.hasRoute<MyPostsRoute>() == true) nav.switchTab(Tab.JOBS)
+    }
 
     Scaffold(
         contentWindowInsets = WindowInsets(0),   // each screen handles its own top inset
@@ -145,7 +155,7 @@ private fun SignedInGraph(
                             selected = selected,
                             onClick = { nav.switchTab(tab) },
                             icon = { Icon(tab.icon, contentDescription = null) },
-                            label = { Text(tab.label, style = MaterialTheme.typography.labelSmall) },
+                            label = { Text(tab.label, style = MaterialTheme.typography.labelSmall, maxLines = 1, softWrap = false) },
                             colors = NavigationBarItemDefaults.colors(
                                 selectedIconColor = MaterialTheme.colorScheme.primary,
                                 selectedTextColor = MaterialTheme.colorScheme.primary,

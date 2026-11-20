@@ -230,7 +230,10 @@ fun SecondaryButton(
     }
 }
 
-/** Compact button for card actions (Shortlist, Still hiring…). [filled] for the main one. */
+/**
+ * Compact button for card actions (Shortlist, Still hiring…). [filled] for the main one,
+ * [outlined] for an equal-sized secondary one next to it, plain text otherwise.
+ */
 @Composable
 fun SmallButton(
     text: String,
@@ -238,19 +241,34 @@ fun SmallButton(
     enabled: Boolean = true,
     filled: Boolean = false,
     destructive: Boolean = false,
+    outlined: Boolean = false,
+    modifier: Modifier = Modifier,
+    icon: ImageVector? = null,
 ) {
     val color = if (destructive) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
-    if (filled) {
-        Button(
-            onClick = onClick, enabled = enabled, shape = MaterialTheme.shapes.small,
+    val content: @Composable RowScope.() -> Unit = {
+        icon?.let { Icon(it, contentDescription = null, modifier = Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)) }
+        Text(text, style = MaterialTheme.typography.labelLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
+    }
+    when {
+        filled -> Button(
+            onClick = onClick, enabled = enabled, shape = MaterialTheme.shapes.small, modifier = modifier,
             colors = ButtonDefaults.buttonColors(containerColor = color),
             contentPadding = PaddingValues(horizontal = Space.lg, vertical = Space.sm),
-        ) { Text(text, style = MaterialTheme.typography.labelLarge) }
-    } else {
-        TextButton(
-            onClick = onClick, enabled = enabled, shape = MaterialTheme.shapes.small,
+            content = content,
+        )
+        outlined -> OutlinedButton(
+            onClick = onClick, enabled = enabled, shape = MaterialTheme.shapes.small, modifier = modifier,
+            colors = ButtonDefaults.outlinedButtonColors(contentColor = color),
+            border = BorderStroke(1.dp, if (enabled) color.copy(alpha = 0.6f) else MaterialTheme.colorScheme.outline),
+            contentPadding = PaddingValues(horizontal = Space.lg, vertical = Space.sm),
+            content = content,
+        )
+        else -> TextButton(
+            onClick = onClick, enabled = enabled, shape = MaterialTheme.shapes.small, modifier = modifier,
             colors = ButtonDefaults.textButtonColors(contentColor = color),
-        ) { Text(text, style = MaterialTheme.typography.labelLarge) }
+            content = content,
+        )
     }
 }
 

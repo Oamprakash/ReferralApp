@@ -13,9 +13,10 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
- * Which bottom-bar tabs to show. "My posts" only appears for people who have verified a work email,
- * so job seekers see four tabs instead of five. The last answer is cached on the phone so referrers
- * don't see the tab pop in after a network round trip.
+ * Which bottom-bar tabs to show. "My posts" only appears while the user has a valid (unexpired)
+ * work-email verification; job seekers, and referrers whose 90 days ran out, don't see it. They can
+ * start again from Profile → "Hiring at your company?". The last answer is cached on the phone so
+ * referrers don't see the tab pop in after a network round trip; it's re-checked on every resume.
  */
 @HiltViewModel
 class TabsViewModel @Inject constructor(
@@ -31,7 +32,7 @@ class TabsViewModel @Inject constructor(
 
     fun refresh() {
         viewModelScope.launch {
-            runCatching { referrers.hasEverVerified() }.onSuccess(::set)
+            runCatching { referrers.myVerification() != null }.onSuccess(::set)
         }
     }
 
