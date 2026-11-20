@@ -54,6 +54,7 @@ import com.referral.app.ui.seeker.ApplyScreen
 import com.referral.app.ui.seeker.JobDetailScreen
 import com.referral.app.ui.seeker.MyApplicationsScreen
 import kotlinx.serialization.Serializable
+import com.referral.app.links.PendingJobLink
 
 /** [returnAfterSave]: opened from a job or Best matches to fill gaps; saving goes back there. */
 @Serializable data class ProfileRoute(val returnAfterSave: Boolean = false)
@@ -121,6 +122,14 @@ private fun SignedInGraph(
     fun openJob(id: String, from: String) {
         Analytics.jobOpened(from)
         nav.navigate(JobDetailRoute(id))
+    }
+    // A shared job link: open it once the signed-in screens are up (after sign-in if needed)
+    val linkedJob by PendingJobLink.jobId.collectAsStateWithLifecycle()
+    LaunchedEffect(linkedJob) {
+        linkedJob?.let { id ->
+            PendingJobLink.consume()
+            openJob(id, "Link")
+        }
     }
     val isProfileTab = dest?.hasRoute<ProfileRoute>() == true &&
         entry?.toRoute<ProfileRoute>()?.returnAfterSave == false && nav.previousBackStackEntry != null

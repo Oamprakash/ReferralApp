@@ -25,6 +25,8 @@ data class MyPostsUiState(
     val stats: ReferrerStats? = null,
     val busyId: String? = null,
     val error: String? = null,
+    /** For share text; null if verification lapsed (the text then leaves the company out). */
+    val companyName: String? = null,
 ) {
     val activeCount get() = posts.count { it.isActive }
 }
@@ -50,6 +52,7 @@ class MyPostsViewModel @Inject constructor(
             // Counts are a nice-to-have: the list still shows if they fail
             runCatching { repo.postsSummary() }.onSuccess { m -> _ui.update { it.copy(summaries = m) } }
             runCatching { repo.myStats() }.onSuccess { s -> _ui.update { it.copy(stats = s) } }
+            runCatching { repo.myVerification() }.onSuccess { v -> _ui.update { it.copy(companyName = v?.company?.name) } }
         }
     }
 

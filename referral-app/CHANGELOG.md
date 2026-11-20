@@ -4,6 +4,23 @@ Release notes shown to testers and users on Google Play live in `store/whatsnew/
 (max 500 characters). The release workflow uploads that file with each build. This file is the
 detailed, developer-facing history.
 
+## Unreleased (next: versionCode 4+)
+
+**From closed-testing feedback**
+- "My posts" tab only for people who have verified a work email; job seekers see 4 tabs. Profile has
+  "Hiring at your company?" to start posting (#18).
+- Sign-in screen: "New here? See how WarmIntro works" replays the welcome tour (#18).
+
+**Growth**
+- Share a job: share button on job details and on each active post in My posts. Links look like
+  `https://oamprakash.github.io/ReferralApp/job.html?id=<job id>`.
+- Job links open straight in the app (Android App Links, verified by
+  `oamprakash.github.io/.well-known/assetlinks.json`). Without the app, `docs/job.html` offers
+  "Open in the app" and the Play Store. Signed-out users see the job after signing in.
+- Play in-app rating prompt at good moments: a seeker's application reaches referred/interview/offer,
+  or a referrer has referred someone. At most once every 90 days; Play may show nothing.
+- Analytics: `share` (`method` seeker/referrer), `review_prompt` (`reason`), `open_job` with `from = Link`.
+
 ## 1.0.2 (versionCode 3)
 
 **User-facing**

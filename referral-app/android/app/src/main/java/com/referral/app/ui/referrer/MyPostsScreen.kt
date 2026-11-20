@@ -45,6 +45,9 @@ import com.referral.app.ui.common.StatTile
 import com.referral.app.ui.common.Tone
 import com.referral.app.ui.theme.Space
 import com.referral.app.ui.theme.extra
+import androidx.compose.ui.platform.LocalContext
+import com.referral.app.links.JobLinks
+import com.referral.app.analytics.Analytics
 
 @Composable
 fun MyPostsScreen(
@@ -54,6 +57,7 @@ fun MyPostsScreen(
     viewModel: MyPostsViewModel = hiltViewModel(),
 ) {
     val ui by viewModel.ui.collectAsStateWithLifecycle()
+    val context = LocalContext.current
     var confirm by remember { mutableStateOf<ConfirmRequest?>(null) }
     ConfirmDialog(confirm, onDismiss = { confirm = null })
 
@@ -110,6 +114,10 @@ fun MyPostsScreen(
                             "Confirm only if the role is still open at your company. The post stays in the feed for another 14 days.",
                             "Yes, still hiring", onConfirm = { viewModel.confirm(post.id) })
                     },
+                    onShare = {
+                        Analytics.jobShared(asReferrer = true)
+                        JobLinks.share(context, JobLinks.referrerText(post.title, ui.companyName, post.location, post.id))
+                    },
                     onClose = {
                         confirm = ConfirmRequest(
                             "Close \"${post.title}\"?",
@@ -156,6 +164,7 @@ private fun PostCard(
     onVerify: () -> Unit,
     onConfirm: () -> Unit,
     onClose: () -> Unit,
+    onShare: () -> Unit,
 ) {
     val x = MaterialTheme.extra
     val c = MaterialTheme.colorScheme
@@ -203,6 +212,7 @@ private fun PostCard(
                     }
                     else -> SmallButton("Still hiring", onConfirm, enabled = !busy)
                 }
+                if (post.isActive && !post.isModerated) SmallButton("Share", onShare, enabled = !busy)
                 SmallButton("Close", onClose, enabled = !busy, destructive = true)
             }
         }

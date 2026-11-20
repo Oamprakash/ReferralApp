@@ -38,8 +38,10 @@ jobs:
       - name: Report build errors
         if: failure()
         run: |
-          # Kotlin errors ("e: file:line message"), then Gradle's "What went wrong" block. GitHub keeps 10 per step.
-          { grep -E "^e: " "$RUNNER_TEMP/build.log" || true
+          # R8 errors ("ERROR: ...", "Missing class ..."), Kotlin errors ("e: file:line message"),
+          # then Gradle's "What went wrong" block. GitHub keeps 10 per step.
+          { grep -E "^ERROR:|Missing class " "$RUNNER_TEMP/build.log" | head -6 || true
+            grep -E "^e: " "$RUNNER_TEMP/build.log" || true
             awk '/^\* What went wrong/{f=1;next} /^\* Try/{f=0} f && NF' "$RUNNER_TEMP/build.log"
           } | head -10 | while IFS= read -r line; do
             echo "::error title=Build::$line"
