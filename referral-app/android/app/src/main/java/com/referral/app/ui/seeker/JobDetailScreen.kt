@@ -58,6 +58,8 @@ import com.referral.app.ui.common.StatusPill
 import com.referral.app.ui.common.Tone
 import com.referral.app.ui.common.VerifiedBadge
 import com.referral.app.ui.theme.Space
+import androidx.compose.material3.HorizontalDivider
+import com.referral.app.ui.common.AppIcons
 import com.referral.app.ui.theme.extra
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.material3.Icon
@@ -87,6 +89,15 @@ fun JobDetailScreen(
     Scaffold(
         topBar = {
             AppTopBar("", onBack = onBack, actions = {
+                if (job != null && job.isOpen && !job.isMine) {
+                    IconButton(onClick = viewModel::toggleSaved) {
+                        Icon(
+                            if (ui.saved) AppIcons.Bookmark else AppIcons.BookmarkBorder,
+                            contentDescription = if (ui.saved) "Remove from saved" else "Save job",
+                            tint = if (ui.saved) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
                 if (job != null && job.status == "active") {
                     IconButton(onClick = {
                         val text = if (job.isMine) JobLinks.referrerText(job.title, job.companyName, job.location, job.id)
@@ -183,7 +194,13 @@ private fun DetailBody(job: JobDetail, ui: JobDetailUiState, modifier: Modifier,
                     style = MaterialTheme.typography.bodySmall, color = MaterialTheme.extra.success,
                 )
             }
-            Text(job.confirmedLabel, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            // Same 14-day rule referrers see on My posts
+            if (job.isOpen && job.isStale) {
+                Text("Not confirmed in the last 14 days. The role may have closed.",
+                    style = MaterialTheme.typography.labelMedium, color = MaterialTheme.extra.warning)
+            } else {
+                Text(job.confirmedLabel, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
         }
 
         // Spots
@@ -208,19 +225,16 @@ private fun DetailBody(job: JobDetail, ui: JobDetailUiState, modifier: Modifier,
             )
             Text(
                 "Each post takes a limited number of applicants so the referrer can review every one." +
-                    if (job.questions.isNotEmpty()) " You'll answer ${job.questions.size} short question(s)." else "",
+                    when (job.questions.size) {
+                        0 -> ""
+                        1 -> " You'll answer 1 short question."
+                        else -> " You'll answer ${job.questions.size} short questions."
+                    },
                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
 
-        if (job.skills.isNotEmpty()) {
-            Column(verticalArrangement = Arrangement.spacedBy(Space.sm)) {
-                Text("Skills", style = MaterialTheme.typography.titleMedium)
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.sm), verticalArrangement = Arrangement.spacedBy(Space.sm)) {
-                    job.skills.forEach { Pill(it, MaterialTheme.colorScheme.secondaryContainer, MaterialTheme.colorScheme.onSecondaryContainer) }
-                }
-            }
-        }
+        if (job.skills.isNotEmpty()) SkillsCard(job, ui.mySkills)
 
         job.description?.let { DescriptionSection(it) }
 
@@ -231,7 +245,7 @@ private fun DetailBody(job: JobDetail, ui: JobDetailUiState, modifier: Modifier,
             }
             job.officialUrl?.let { url ->
                 SecondaryButton("View on careers page", onClick = { runCatching { uriHandler.openUri(url) } },
-                    icon = Icons.Filled.Share)
+                    icon = AppIcons.OpenInNew)
             }
             Text("Check the role on the company's own site. The referral goes through their official portal.",
                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -256,7 +270,9 @@ private fun ActionBar(
     onCompleteProfile: () -> Unit,
     onWithdraw: () -> Unit,
 ) {
-    Surface(color = MaterialTheme.colorScheme.surface, shadowElevation = 12.dp) {
+    Surface(color = MaterialTheme.colorScheme.surface) {
+      Column {
+        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)   // 1dp line between the page and the bar
         Column(
             Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = Space.screen, vertical = Space.md),
             verticalArrangement = Arrangement.spacedBy(Space.sm),
@@ -296,6 +312,7 @@ private fun ActionBar(
                 null -> Unit
             }
         }
+      }
     }
 }
 
@@ -320,6 +337,33 @@ private fun DescriptionSection(text: String) {
         )
         if (overflows || expanded) {
             TextButton(onClick = { expanded = !expanded }) { Text(if (expanded) "Show less" else "Show more") }
+        }
+    }
+}
+
+/**
+ * Skills in a card like the rest of the page. If the viewer has a profile, skills they have are
+ * green with a tick (as on Best matches) and the rest neutral, with a count at the top.
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun SkillsCard(job: JobDetail, mySkills: Set<String>?) {
+    val compare = mySkills != null && mySkills.isNotEmpty() && !job.isMine
+    val have = if (compare) job.skills.count { it.trim().lowercase() in mySkills!! } else 0
+    AppCard {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("Skills", style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
+            if (compare) {
+                Text("You have $have of ${job.skills.size}", style = MaterialTheme.typography.labelLarge,
+                    color = if (have > 0) MaterialTheme.extra.success else MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.sm), verticalArrangement = Arrangement.spacedBy(Space.sm)) {
+            job.skills.forEach { skill ->
+                val mine = compare && skill.trim().lowercase() in mySkills!!
+                if (mine) Pill("✓ $skill", MaterialTheme.extra.successContainer, MaterialTheme.extra.onSuccessContainer)
+                else MetaPill(skill)
+            }
         }
     }
 }

@@ -93,6 +93,13 @@ detailed, developer-facing history.
 - Post a job button shrinks to "+" once you scroll.
 - "Your impact" card ~36dp shorter: 16dp padding, active-posts pill on the title row.
 
+**Job details polish**
+- Past 14 days without confirmation the post says "Not confirmed in the last 14 days. The role may have closed."
+  instead of "Confirmed active 17 days ago" (matches the auto-hide rule on My posts).
+- "View on careers page" uses an open-in-new icon; "1 short question" / "2 short questions".
+- Skills in a card: your skills green with ✓, the rest grey, plus "You have 3 of 5".
+- Bookmark in the top bar next to Share; 1dp line above the bottom bar instead of a shadow.
+
 ## 1.0.2 (versionCode 3)
 
 **User-facing**

@@ -6,6 +6,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.referral.app.data.JobRepository
+import com.referral.app.data.ProfileRepository
+import com.referral.app.data.SavedJobs
 import com.referral.app.data.ReportException
 import com.referral.app.data.ReportReason
 import com.referral.app.data.SafetyRepository
@@ -33,6 +35,9 @@ data class JobDetailUiState(
     val error: String? = null,
     val reporting: Boolean = false,
     val reportMessage: String? = null,
+    /** The viewer's skills, lower-cased, to mark which of the job's skills they have. Null until loaded. */
+    val mySkills: Set<String>? = null,
+    val saved: Boolean = false,
 ) {
     val action: ApplyAction?
         get() {
@@ -57,12 +62,25 @@ class JobDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val jobs: JobRepository,
     private val safety: SafetyRepository,
+    private val profiles: ProfileRepository,
+    private val savedJobs: SavedJobs,
 ) : ViewModel() {
 
     val jobId: String = savedStateHandle.toRoute<JobDetailRoute>().jobId
 
     private val _ui = MutableStateFlow(JobDetailUiState())
     val ui: StateFlow<JobDetailUiState> = _ui.asStateFlow()
+
+    init {
+        viewModelScope.launch { savedJobs.ids.collect { ids -> _ui.update { it.copy(saved = jobId in ids) } } }
+        viewModelScope.launch {
+            runCatching { profiles.myProfile() }.onSuccess { p ->
+                _ui.update { it.copy(mySkills = p?.skills.orEmpty().map { s -> s.trim().lowercase() }.toSet()) }
+            }
+        }
+    }
+
+    fun toggleSaved() { savedJobs.toggle(jobId) }
 
     /** Called on every resume so the screen reflects an application made on the apply screen. */
     fun load() {

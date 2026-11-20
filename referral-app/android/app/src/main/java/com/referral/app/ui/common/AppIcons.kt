@@ -20,6 +20,14 @@ object AppIcons {
             "M17,3H7c-1.1,0 -1.99,0.9 -1.99,2L5,21l7,-3 7,3V5c0,-1.1 -0.9,-2 -2,-2zM17,18l-5,-2.18L7,18V5h10v13z",
         )
     }
+    /** Opens an outside website (box with an arrow). */
+    val OpenInNew: ImageVector by lazy {
+        icon(
+            "OpenInNew",
+            "M19,19H5V5h7V3H5c-1.11,0 -2,0.9 -2,2v14c0,1.1 0.89,2 2,2h14c1.1,0 2,-0.9 2,-2v-7h-2v7z" +
+                "M14,3v2h3.59l-9.83,9.83 1.41,1.41L19,6.41V10h2V3h-7z",
+        )
+    }
     /** Filter sliders. */
     val Tune: ImageVector by lazy {
         icon(
