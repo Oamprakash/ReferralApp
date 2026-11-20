@@ -33,6 +33,9 @@ import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
+import com.referral.app.ui.common.AppCard
+import androidx.compose.material.icons.filled.Create
+import androidx.compose.material.icons.filled.AccountBox
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.DropdownMenu
@@ -97,6 +100,9 @@ fun HomeScreen(
     onOpenJob: (id: String, from: String) -> Unit,
     onEditProfile: () -> Unit,
     onProfile: () -> Unit,
+    /** Not a verified referrer yet: invite them to post openings (people often skip the intro). */
+    showPostPrompt: Boolean = false,
+    onPostJob: () -> Unit = {},
     viewModel: FeedViewModel = hiltViewModel(),
     matchesViewModel: MatchesViewModel = hiltViewModel(),
 ) {
@@ -147,6 +153,31 @@ fun HomeScreen(
             }
             item {
                 Box(Modifier.padding(top = Space.xs)) { ModeSwitch(bestMatches) { bestMatches = it } }   // 16 below the header
+            }
+
+            // Getting-started cards: browse first, then upload a resume; and posting, for employees
+            if (ui.profileComplete == false) {
+                item {
+                    PromptCard(
+                        icon = Icons.Filled.AccountBox,
+                        title = "Upload your resume to ask for referrals",
+                        body = "Browse as much as you like first. Your resume fills in your profile and ranks Best matches by your skills.",
+                        action = "Upload resume",
+                        onAction = onEditProfile,
+                    )
+                }
+            }
+            if (showPostPrompt && !ui.postPromptDismissed) {
+                item {
+                    PromptCard(
+                        icon = Icons.Filled.Create,
+                        title = "Work at an IT company?",
+                        body = "Post openings at your company and refer people. You review every applicant, and it's free.",
+                        action = "Post a job",
+                        onAction = onPostJob,
+                        onDismiss = viewModel::dismissPostPrompt,
+                    )
+                }
             }
 
             if (bestMatches) {
@@ -448,6 +479,35 @@ private fun FilterOptions(ui: FeedUiState, viewModel: FeedViewModel) {
             ui.companies.forEach { c ->
                 DropdownMenuItem(text = { Text(c.name) }, onClick = { companyMenu = false; viewModel.setCompany(c.id) })
             }
+        }
+    }
+}
+
+/** A small call-to-action card in the Jobs list. [onDismiss] adds a "Not now" button. */
+@Composable
+private fun PromptCard(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    title: String,
+    body: String,
+    action: String,
+    onAction: () -> Unit,
+    onDismiss: (() -> Unit)? = null,
+) {
+    val c = MaterialTheme.colorScheme
+    AppCard(modifier = Modifier.padding(horizontal = Space.screen)) {
+        Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(Space.md)) {
+            Box(
+                Modifier.size(40.dp).clip(CircleShape).background(c.primary.copy(alpha = 0.12f)),
+                contentAlignment = Alignment.Center,
+            ) { Icon(icon, contentDescription = null, tint = c.primary, modifier = Modifier.size(20.dp)) }
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Space.xs)) {
+                Text(title, style = MaterialTheme.typography.titleMedium)
+                Text(body, style = MaterialTheme.typography.bodyMedium, color = c.onSurfaceVariant)
+            }
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(Space.sm)) {
+            SmallButton(action, onAction, filled = true)
+            onDismiss?.let { SmallButton("Not now", it) }
         }
     }
 }

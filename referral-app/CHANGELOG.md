@@ -102,6 +102,12 @@ Play "What's new": `store/whatsnew/whatsnew-en-US`.
 - Skills in a card: your skills green with ✓, the rest grey, plus "You have 3 of 5".
 - Bookmark in the top bar next to Share; 1dp line above the bottom bar instead of a shadow.
 
+**Browse first, discover posting**
+- Sign-in lands on Jobs, not the profile form: people can look around before uploading a resume.
+  Applying still asks for a complete profile.
+- Jobs tab cards: "Upload your resume to ask for referrals" until the profile is complete, and
+  "Work at an IT company? Post a job" for non-referrers (dismissable with Not now), since many skip the intro.
+
 **Small fixes**
 - Overqualified counts as half a fit: more than a year above the range scores 25/50 for experience (was 0).
   Needs migration `20261123000000_overqualified_score.sql`.
