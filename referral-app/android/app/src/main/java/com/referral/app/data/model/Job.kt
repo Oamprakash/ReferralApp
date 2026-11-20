@@ -70,6 +70,10 @@ data class JobDetail(
     val experienceLabel: String get() = experienceLabel(expMin, expMax)
     val workModeLabel: String get() = workMode.replaceFirstChar { it.uppercase() }
     val isOpen: Boolean get() = status == "active"
+    /** Past the 14-day confirmation window (the daily job hides these; this covers the gap before it runs). */
+    val isStale: Boolean get() = runCatching {
+        Duration.between(OffsetDateTime.parse(lastConfirmedAt), OffsetDateTime.now()).toDays() >= 14
+    }.getOrDefault(false)
     val weeklyLimitReached: Boolean get() = applicationsThisWeek >= WEEKLY_LIMIT
 
     companion object { const val WEEKLY_LIMIT = 10 }
