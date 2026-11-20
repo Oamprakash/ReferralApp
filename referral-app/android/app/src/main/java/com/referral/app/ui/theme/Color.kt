@@ -120,7 +120,7 @@ data class ExtraColors(
 val LightExtra = ExtraColors(
     heroGradient = Brush.linearGradient(listOf(Brand.Teal700, Brand.Indigo800)),
     onHero = Color.White,
-    onHeroMuted = Color(0xCCFFFFFF),
+    onHeroMuted = Color(0xE6FFFFFF),   // 90%: keeps 4.5:1 over the light teal end of the hero
     accent = Brand.Amber400,
     onAccent = Color(0xFF3B2600),
     success = Color(0xFF15803D),

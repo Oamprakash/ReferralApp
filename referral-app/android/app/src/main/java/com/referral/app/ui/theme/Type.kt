@@ -39,5 +39,8 @@ val AppTypography = Typography(
     bodySmall = style(12, 17, FontWeight.Normal),
     labelLarge = style(14, 20, FontWeight.SemiBold),
     labelMedium = style(12, 16, FontWeight.SemiBold),
-    labelSmall = style(11, 14, FontWeight.SemiBold, 0.02),
+    labelSmall = style(12, 16, FontWeight.SemiBold, 0.02),
 )
+
+/** Same-width digits, so numbers in tiles, scores and counts line up. */
+fun TextStyle.tabular(): TextStyle = copy(fontFeatureSettings = "tnum")

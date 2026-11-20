@@ -47,6 +47,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import com.referral.app.ui.theme.tabular
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -377,7 +378,7 @@ fun StatTile(value: String, label: String, modifier: Modifier = Modifier, onHero
     val fg = if (onHero) MaterialTheme.extra.onHero else MaterialTheme.colorScheme.onSurface
     val muted = if (onHero) MaterialTheme.extra.onHeroMuted else MaterialTheme.colorScheme.onSurfaceVariant
     Column(modifier) {
-        Text(value, style = MaterialTheme.typography.headlineSmall, color = fg)
+        Text(value, style = MaterialTheme.typography.headlineSmall.tabular(), color = fg)
         Text(label, style = MaterialTheme.typography.labelMedium, color = muted)
     }
 }
@@ -404,7 +405,7 @@ fun ScoreRing(score: Int, size: Dp = 52.dp) {
             strokeWidth = 5.dp,
             strokeCap = StrokeCap.Round,
         )
-        Text("$score", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.ExtraBold)
+        Text("$score", style = MaterialTheme.typography.titleSmall.tabular(), fontWeight = FontWeight.ExtraBold)
     }
 }
 
