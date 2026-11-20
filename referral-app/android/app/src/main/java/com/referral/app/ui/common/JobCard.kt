@@ -65,7 +65,7 @@ fun JobCard(
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.Filled.LocationOn, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(16.dp))
-            Spacer(Modifier.width(4.dp))
+            Spacer(Modifier.width(Space.sm))
             Text(
                 listOf(location, experience, workMode).filter { it.isNotBlank() }.joinToString(" · "),
                 style = MaterialTheme.typography.bodyMedium,
@@ -77,7 +77,7 @@ fun JobCard(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Filled.CheckCircle, contentDescription = null, tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(16.dp))
-                Spacer(Modifier.width(4.dp))
+                Spacer(Modifier.width(Space.sm))
                 Text(
                     it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1, overflow = TextOverflow.Ellipsis,

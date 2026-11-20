@@ -12,9 +12,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.filled.Create
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -72,14 +71,18 @@ fun MyPostsScreen(
     }
 
     Scaffold(
-        topBar = {
-            AppTopBar("My posts", subtitle = "Openings you've shared as an employee") {
-                // In the top bar rather than a floating button, so it never covers a card's actions
-                SmallButton("Post a job", onPostJob, filled = true, icon = Icons.Filled.Add)
-                Spacer(Modifier.width(Space.sm))
-            }
-        },
+        topBar = { AppTopBar("My posts", subtitle = "Openings you've shared as an employee") },
         containerColor = MaterialTheme.colorScheme.background,
+        floatingActionButton = {
+            ExtendedFloatingActionButton(
+                onClick = onPostJob,
+                icon = { Icon(Icons.Filled.Add, contentDescription = null) },
+                text = { Text("Post a job", style = MaterialTheme.typography.labelLarge) },
+                containerColor = MaterialTheme.extra.accent,
+                contentColor = MaterialTheme.extra.onAccent,
+                shape = MaterialTheme.shapes.medium,
+            )
+        },
     ) { padding ->
         if (ui.loading) {
             LoadingBox(Modifier.padding(padding))
@@ -87,7 +90,7 @@ fun MyPostsScreen(
         }
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(padding),
-            contentPadding = PaddingValues(start = Space.screen, end = Space.screen, top = Space.sm, bottom = Space.xxl),
+            contentPadding = PaddingValues(start = Space.screen, end = Space.screen, top = Space.lg, bottom = 96.dp)   // last card scrolls clear of the floating button,
             verticalArrangement = Arrangement.spacedBy(Space.cardGap),
         ) {
             item { ImpactCard(ui) }

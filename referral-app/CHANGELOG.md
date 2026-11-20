@@ -67,6 +67,12 @@ detailed, developer-facing history.
   12sp is kept for timestamps, badges and tab labels.
 - Pills 12×4 padding, chip rows 8dp apart, icons 16/20dp.
 
+**Text spacing guideline**
+- "Post a job" back as the floating button on My posts; the list keeps 96dp at the bottom so the last card clears it.
+- Applied progress labels are spread with equal gaps (≥12dp on a 360dp phone) and each dot sits over its label.
+- Headings: titleLarge 20/24 and slightly tighter tracking; all-caps tour labels get +1sp tracking.
+- 16dp from the screen header to the first card on Applied, My posts and Applicants; 6–8dp between an icon and its text.
+
 ## 1.0.2 (versionCode 3)
 
 **User-facing**
