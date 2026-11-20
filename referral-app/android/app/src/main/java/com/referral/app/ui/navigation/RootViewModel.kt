@@ -38,9 +38,19 @@ class RootViewModel @Inject constructor(
     private val _showTour = MutableStateFlow(!onboarding.seen)
     val showTour: StateFlow<Boolean> = _showTour.asStateFlow()
 
+    /** True when the tour was opened from the sign-in screen ("See how it works"), not on first launch. */
+    private val _tourReplay = MutableStateFlow(false)
+    val tourReplay: StateFlow<Boolean> = _tourReplay.asStateFlow()
+
     fun finishTour() {
         onboarding.markSeen()
         _showTour.value = false
+        _tourReplay.value = false
+    }
+
+    fun replayTour() {
+        _tourReplay.value = true
+        _showTour.value = true
     }
 
     init {
