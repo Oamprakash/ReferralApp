@@ -83,8 +83,15 @@ data class MyApplication(
     val status: String,
     @SerialName("created_at") val createdAt: String,
     @SerialName("reapplied_at") val reappliedAt: String? = null,
+    /** Last change to the row; for anything past "applied" that's when the status last moved. */
+    @SerialName("updated_at") val updatedAt: String? = null,
     @SerialName("jobs") val job: AppliedJob? = null,
 ) {
+    /** "Applied 3d ago", "Referred yesterday", "Offer Nov 18": answers "is this stale?". */
+    val activityLabel: String get() = when (status) {
+        "applied", "waitlisted" -> "Applied ${relativeDay(reappliedAt ?: createdAt)}"
+        else -> "${shortStatusLabel(status)} ${relativeDay(updatedAt ?: createdAt)}"
+    }
     val canWithdraw: Boolean get() = status == "applied" || status == "waitlisted"
     val canReapply: Boolean get() = status == "withdrawn" && reappliedAt == null && job?.status == "active"
 }
@@ -111,6 +118,35 @@ fun applicationStatusLabel(status: String?): String = when (status) {
     "not_selected" -> "Not selected"
     "withdrawn" -> "Withdrawn"
     else -> status.orEmpty()
+}
+
+/** One or two words, for places where the full [applicationStatusLabel] doesn't fit. */
+fun shortStatusLabel(status: String?): String = when (status) {
+    "applied" -> "Applied"
+    "waitlisted" -> "Waitlisted"
+    "shortlisted" -> "Shortlisted"
+    "declined" -> "Not taken forward"
+    "referred" -> "Referred"
+    "interview" -> "Interview"
+    "offer" -> "Offer"
+    "not_selected" -> "Not selected"
+    "withdrawn" -> "Withdrawn"
+    else -> status.orEmpty()
+}
+
+/** "today", "yesterday", "3d ago", or a date like "Nov 18" after a week. */
+internal fun relativeDay(timestamp: String): String {
+    val then = runCatching { OffsetDateTime.parse(timestamp) }.getOrNull() ?: return ""
+    val days = java.time.temporal.ChronoUnit.DAYS.between(
+        then.atZoneSameInstant(java.time.ZoneId.systemDefault()).toLocalDate(), java.time.LocalDate.now(),
+    )
+    return when {
+        days <= 0L -> "today"
+        days == 1L -> "yesterday"
+        days < 7L -> "${days}d ago"
+        else -> then.atZoneSameInstant(java.time.ZoneId.systemDefault())
+            .format(java.time.format.DateTimeFormatter.ofPattern("MMM d", java.util.Locale.ENGLISH))
+    }
 }
 
 internal fun confirmedLabel(lastConfirmedAt: String): String {
