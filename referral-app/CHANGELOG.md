@@ -26,6 +26,13 @@ detailed, developer-facing history.
 - Small labels (bottom tabs, badges) 11sp → 12sp.
 - Numbers in stat tiles, score rings and score bars use same-width digits so they line up.
 
+**Lighter cards (3–4 things at a glance, one main action)**
+- Jobs / For you: location, experience and work mode on one line instead of three pills; team moved to the job screen only.
+- For you: one summary line ("3 of 5 skills · experience fits"); the score bars and skill pills open with "Why this score".
+- Applied: status pill moved into the header; Withdraw moved to the ⋮ menu (still on the job screen).
+- My posts: stats as one line; "Still hiring" shows on the card only when the post needs it; Share, Close and Still hiring otherwise in the ⋮ menu.
+- Applicants: 3 skills + "+N"; the next step, Resume and Contact stay visible; Decline/Not selected and Report in the ⋮ menu.
+
 ## 1.0.2 (versionCode 3)
 
 **User-facing**

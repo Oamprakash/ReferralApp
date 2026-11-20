@@ -33,6 +33,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.referral.app.data.model.MyPost
 import com.referral.app.data.model.PostSummary
 import com.referral.app.ui.common.AppCard
+import com.referral.app.ui.common.CardMenu
+import com.referral.app.ui.common.MenuAction
 import com.referral.app.ui.common.AppTopBar
 import com.referral.app.ui.common.Banner
 import com.referral.app.ui.common.ConfirmDialog
@@ -44,6 +46,7 @@ import com.referral.app.ui.common.SmallButton
 import com.referral.app.ui.common.StatTile
 import com.referral.app.ui.common.Tone
 import com.referral.app.ui.theme.Space
+import com.referral.app.ui.theme.tabular
 import com.referral.app.ui.theme.extra
 import androidx.compose.ui.platform.LocalContext
 import com.referral.app.links.JobLinks
@@ -191,29 +194,34 @@ private fun PostCard(
         }
         look.note?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = look.fg) }
 
-        Row(Modifier.fillMaxWidth()) {
-            StatTile("${summary?.applicants ?: 0}", "Applicants", Modifier.weight(1f))
-            StatTile("${summary?.newCount ?: 0}", "To review", Modifier.weight(1f))
-            StatTile("${summary?.referred ?: 0}", "Referred", Modifier.weight(1f))
-        }
+        val applicants = summary?.applicants ?: 0
+        val newCount = summary?.newCount ?: 0
+        val referred = summary?.referred ?: 0
+        Text(
+            "$applicants applicant${if (applicants == 1) "" else "s"} · $newCount to review · $referred referred",
+            style = MaterialTheme.typography.bodyMedium.tabular(), color = c.onSurfaceVariant,
+        )
 
+        // One main action on the card; "Still hiring" shows here only when the post needs it,
+        // everything else is in the ⋮ menu.
+        val open = post.status != "closed" && !post.isModerated     // moderated: only moderators can bring it back
+        val needsVerify = open && post.hiddenReason == "verification"
+        val needsConfirm = open && look.label != "Live"
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            SmallButton(
-                if ((summary?.newCount ?: 0) > 0) "Review ${summary!!.newCount} new" else "Applicants",
-                onApplicants, filled = true,
-            )
+            SmallButton(if (newCount > 0) "Review $newCount new" else "Applicants", onApplicants, filled = true)
             androidx.compose.foundation.layout.Spacer(Modifier.weight(1f))
+            if (needsVerify) SmallButton("Verify", onVerify, enabled = !busy)
+            else if (needsConfirm) SmallButton("Still hiring", onConfirm, enabled = !busy)
             if (post.status != "closed") {
-                when {
-                    post.isModerated -> Unit                                    // only moderators can bring it back
-                    post.hiddenReason == "verification" -> {
-                        SmallButton("Verify", onVerify, enabled = !busy)
-                        SmallButton("Still hiring", onConfirm, enabled = !busy)
-                    }
-                    else -> SmallButton("Still hiring", onConfirm, enabled = !busy)
-                }
-                if (post.isActive && !post.isModerated) SmallButton("Share", onShare, enabled = !busy)
-                SmallButton("Close", onClose, enabled = !busy, destructive = true)
+                CardMenu(
+                    buildList {
+                        if (needsVerify) add(MenuAction("Still hiring", onClick = onConfirm))
+                        if (open && !needsConfirm) add(MenuAction("Still hiring", onClick = onConfirm))
+                        if (post.isActive && !post.isModerated) add(MenuAction("Share", onClick = onShare))
+                        add(MenuAction("Close post", destructive = true, onClick = onClose))
+                    },
+                    enabled = !busy,
+                )
             }
         }
     }

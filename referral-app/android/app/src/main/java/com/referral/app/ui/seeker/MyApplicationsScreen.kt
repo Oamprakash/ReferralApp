@@ -37,6 +37,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.referral.app.data.model.MyApplication
 import com.referral.app.data.model.applicationStatusLabel
 import com.referral.app.ui.common.AppCard
+import com.referral.app.ui.common.CardMenu
+import com.referral.app.ui.common.MenuAction
 import com.referral.app.ui.common.AppTopBar
 import com.referral.app.ui.common.Banner
 import com.referral.app.ui.common.CompanyAvatar
@@ -153,15 +155,20 @@ private fun ApplicationCard(app: MyApplication, busy: Boolean, onOpen: () -> Uni
                 Text(
                     listOfNotNull(company, if (app.job?.status == "closed") "role closed" else null).joinToString(" · "),
                     style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1, overflow = TextOverflow.Ellipsis,
                 )
             }
+            StatusPill(app.status, applicationStatusLabel(app.status))
+            // Withdraw is rarely needed, so it sits in the menu (also on the job screen).
+            CardMenu(
+                if (app.canWithdraw) listOf(MenuAction("Withdraw", destructive = true, onClick = onWithdraw)) else emptyList(),
+                enabled = !busy,
+            )
         }
-        StatusPill(app.status, applicationStatusLabel(app.status))
         Progress(app.status)
-        if (app.canWithdraw || app.canReapply) {
+        if (app.canReapply) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                if (app.canReapply) SmallButton("Apply again", onOpen, filled = true)   // the job screen has the reapply button
-                if (app.canWithdraw) SmallButton("Withdraw", onWithdraw, enabled = !busy, destructive = true)
+                SmallButton("Apply again", onOpen, filled = true)   // the job screen has the reapply button
             }
         }
     }

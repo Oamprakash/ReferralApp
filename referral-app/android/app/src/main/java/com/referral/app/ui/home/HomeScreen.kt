@@ -135,7 +135,6 @@ fun HomeScreen(
                         JobCard(
                             title = job.title,
                             company = job.companyName,
-                            team = job.team,
                             location = job.location,
                             experience = job.experienceLabel,
                             workMode = job.workModeLabel,
