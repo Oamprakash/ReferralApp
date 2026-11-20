@@ -14,13 +14,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Create
 import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -64,6 +65,8 @@ fun MyPostsScreen(
     val context = LocalContext.current
     var confirm by remember { mutableStateOf<ConfirmRequest?>(null) }
     ConfirmDialog(confirm, onDismiss = { confirm = null })
+    val listState = rememberLazyListState()
+    val fabExpanded by remember { derivedStateOf { listState.firstVisibleItemIndex == 0 && listState.firstVisibleItemScrollOffset < 48 } }
 
     LifecycleResumeEffect(Unit) {
         viewModel.load()
@@ -74,7 +77,9 @@ fun MyPostsScreen(
         topBar = { AppTopBar("My posts", subtitle = "Openings you've shared as an employee") },
         containerColor = MaterialTheme.colorScheme.background,
         floatingActionButton = {
+            // Shrinks to just "+" once you scroll, so it doesn't sit over card pills
             ExtendedFloatingActionButton(
+                expanded = fabExpanded,
                 onClick = onPostJob,
                 icon = { Icon(Icons.Filled.Add, contentDescription = null) },
                 text = { Text("Post a job", style = MaterialTheme.typography.labelLarge) },
@@ -89,6 +94,7 @@ fun MyPostsScreen(
             return@Scaffold
         }
         LazyColumn(
+            state = listState,
             modifier = Modifier.fillMaxSize().padding(padding),
             contentPadding = PaddingValues(start = Space.screen, end = Space.screen, top = Space.lg, bottom = 96.dp),   // last card scrolls clear of the floating button
             verticalArrangement = Arrangement.spacedBy(Space.cardGap),
@@ -196,7 +202,7 @@ private fun PostCard(
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Space.xs)) {
                 Text(post.title, style = MaterialTheme.typography.titleMedium)
                 Text(
-                    if (look.label == "Live") "${post.location} · confirmed ${post.confirmedDaysAgo}d ago" else post.location,
+                    if (look.label == "Live") "${post.location} · ${confirmedText(post.confirmedDaysAgo.toInt())}" else post.location,
                     style = MaterialTheme.typography.bodyMedium, color = c.onSurfaceVariant,
                 )
             }
@@ -215,9 +221,9 @@ private fun PostCard(
             }
         }
         look.note?.let {
-            Text(it, style = MaterialTheme.typography.bodyMedium,
-                color = if (look.label == "Confirm soon") x.warning else c.onSurfaceVariant)
-            HorizontalDivider(color = x.cardBorder)
+            // "Confirm soon" is an alert: soft amber callout. Other notes are plain grey text.
+            if (look.label == "Confirm soon") Banner(it, Tone.WARNING)
+            else Text(it, style = MaterialTheme.typography.bodyMedium, color = c.onSurfaceVariant)
         }
 
         val applicants = summary?.applicants ?: 0
@@ -245,6 +251,11 @@ private fun PostCard(
                     SmallButton(reviewLabel, onApplicants, filled = true, modifier = half)
                     SmallButton("Still hiring", onConfirm, enabled = !busy, outlined = true, modifier = half)
                 }
+                // No applicants yet: sharing is what helps, so it leads
+                post.isActive && !post.isModerated && applicants == 0 -> {
+                    SmallButton("Share", onShare, enabled = !busy, filled = true, modifier = half)
+                    SmallButton("Applicants (0)", onApplicants, outlined = true, modifier = half)
+                }
                 post.isActive && !post.isModerated -> {
                     SmallButton(reviewLabel, onApplicants, filled = true, modifier = half)
                     SmallButton("Share", onShare, enabled = !busy, outlined = true, modifier = half)
@@ -253,4 +264,11 @@ private fun PostCard(
             }
         }
     }
+}
+
+/** "Confirmed today", "Confirmed yesterday", "Confirmed 5d ago". */
+private fun confirmedText(days: Int): String = when {
+    days <= 0 -> "Confirmed today"
+    days == 1 -> "Confirmed yesterday"
+    else -> "Confirmed ${days}d ago"
 }

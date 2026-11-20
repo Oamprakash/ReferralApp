@@ -86,6 +86,12 @@ detailed, developer-facing history.
 - Footer names the referrer: "Sent to Arjun · Nov 13", "Referred by Arjun · yesterday", "Interview · 2d ago · via Arjun"
   (needs migration `20261122000000_job_posters_applied.sql`; without it the name is left out).
 
+**My posts polish**
+- "Confirmed today / yesterday / 5d ago" instead of "confirmed 0d ago".
+- Live post with no applicants: Share is the filled button, "Applicants (0)" outlined.
+- "Auto-hides in N days" shows in a soft amber callout.
+- Post a job button shrinks to "+" once you scroll.
+
 ## 1.0.2 (versionCode 3)
 
 **User-facing**
