@@ -100,6 +100,12 @@ detailed, developer-facing history.
 - Skills in a card: your skills green with ✓, the rest grey, plus "You have 3 of 5".
 - Bookmark in the top bar next to Share; 1dp line above the bottom bar instead of a shadow.
 
+**Profile spacing**
+- 16dp from the header to the first card and between cards; summary card 16dp padding.
+- Title → subtitle 4dp everywhere (summary, resume, contact heading, menu rows).
+- Secondary text 12sp → 14sp (resume hints, contact note, skills hint, menu subtitles, privacy messages).
+- City/Years 12dp apart; menu icons 20dp in 40dp circles; skill pills in the brand teal tint.
+
 ## 1.0.2 (versionCode 3)
 
 **User-facing**
