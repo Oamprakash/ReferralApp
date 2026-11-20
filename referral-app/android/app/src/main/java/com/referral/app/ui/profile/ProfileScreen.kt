@@ -128,8 +128,8 @@ fun ProfileScreen(
                 .padding(padding)
                 .imePadding()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = Space.screen, vertical = Space.sm),
-            verticalArrangement = Arrangement.spacedBy(Space.lg),
+                .padding(start = Space.screen, end = Space.screen, top = Space.lg, bottom = Space.sm),
+            verticalArrangement = Arrangement.spacedBy(Space.cardGap),
         ) {
             if (!firstTime) SummaryCard(ui)
 
@@ -139,7 +139,7 @@ fun ProfileScreen(
                 Text("About you", style = MaterialTheme.typography.titleMedium)
                 OutlinedTextField(ui.fullName, viewModel::onName, label = { Text("Full name") },
                     singleLine = true, modifier = Modifier.fillMaxWidth())
-                Row(horizontalArrangement = Arrangement.spacedBy(Space.sm)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(Space.md)) {
                     OutlinedTextField(ui.city, viewModel::onCity, label = { Text("City") },
                         singleLine = true, modifier = Modifier.weight(1.4f))
                     OutlinedTextField(
@@ -153,11 +153,13 @@ fun ProfileScreen(
             SkillsCard(ui.skillsText, viewModel::onSkills)
 
             AppCard {
-                Text("Contact for referrals", style = MaterialTheme.typography.titleMedium)
-                Text(
-                    "Referrers need these for their company's referral form. They only see them after shortlisting you.",
-                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                Column(verticalArrangement = Arrangement.spacedBy(Space.xs)) {
+                    Text("Contact for referrals", style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        "Referrers need these for their company's referral form. They only see them after shortlisting you.",
+                        style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
                 OutlinedTextField(
                     ui.contactEmail, viewModel::onContactEmail, label = { Text("Email (optional)") },
                     singleLine = true, isError = ui.emailProblem != null,
@@ -183,7 +185,7 @@ fun ProfileScreen(
             if (showPrivacy) {
                 AppCard(contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = Space.sm)) {
                     Text("Your data", style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier.padding(horizontal = Space.lg, vertical = Space.xs))
+                        modifier = Modifier.padding(start = Space.lg, end = Space.lg, top = Space.sm, bottom = Space.xs))
                     MenuRow(Icons.Filled.Share, if (ui.exporting) "Preparing…" else "Download my data",
                         "A copy of everything we store about you", onClick = viewModel::prepareExport)
                     HorizontalDivider(color = MaterialTheme.extra.cardBorder)
@@ -191,8 +193,8 @@ fun ProfileScreen(
                         "Removes your profile, resume, posts and applications", destructive = true,
                         onClick = { confirmDelete = true })
                     ui.privacyMessage?.let {
-                        Text(it, style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.padding(horizontal = Space.lg, vertical = Space.xs))
+                        Text(it, style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.padding(horizontal = Space.lg, vertical = Space.sm))
                     }
                 }
             }
@@ -230,12 +232,12 @@ fun ProfileScreen(
 @Composable
 private fun SummaryCard(ui: ProfileUiState) {
     Row(
-        Modifier.fillMaxWidth().clip(MaterialTheme.shapes.large).background(MaterialTheme.extra.heroGradient).padding(Space.xl),
+        Modifier.fillMaxWidth().clip(MaterialTheme.shapes.large).background(MaterialTheme.extra.heroGradient).padding(Space.lg),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Space.lg),
     ) {
-        PersonAvatar(ui.fullName, size = 60.dp)
-        Column(Modifier.weight(1f)) {
+        PersonAvatar(ui.fullName, size = 56.dp)
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Space.xs)) {
             Text(ui.fullName.ifBlank { "Your name" }, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.extra.onHero)
             Text(
                 listOfNotNull(ui.experienceYears?.let { "$it yrs experience" }, ui.city.ifBlank { null }).joinToString(" · "),
@@ -255,12 +257,12 @@ private fun ResumeCard(ui: ProfileUiState, onPick: () -> Unit) {
                 contentAlignment = Alignment.Center,
             ) {
                 when {
-                    ui.uploading -> CircularProgressIndicator(Modifier.size(22.dp), strokeWidth = 2.dp)
+                    ui.uploading -> CircularProgressIndicator(Modifier.size(24.dp), strokeWidth = 2.dp)
                     ui.hasResume -> Icon(Icons.Filled.Check, null, tint = MaterialTheme.extra.success)
                     else -> Icon(Icons.Filled.AccountBox, null, tint = MaterialTheme.colorScheme.primary)
                 }
             }
-            Column(Modifier.weight(1f)) {
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Space.xs)) {
                 Text(
                     when {
                         ui.uploading -> "Uploading and reading…"
@@ -271,14 +273,14 @@ private fun ResumeCard(ui: ProfileUiState, onPick: () -> Unit) {
                 )
                 Text(
                     if (ui.hasResume) "Tap to replace (PDF, max 5 MB)" else "PDF, max 5 MB. We'll fill in the rest for you.",
-                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
             Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         ui.autofillNote?.let { Banner(it, if (it.startsWith("Filled")) Tone.SUCCESS else Tone.INFO) }
             ?: Text("Your resume is read on this phone. The text isn't sent anywhere.",
-                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
@@ -296,10 +298,10 @@ private fun SkillsCard(text: String, onChange: (String) -> Unit) {
         val list = Skills.normalizeList(text)
         if (list.isNotEmpty()) {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.sm), verticalArrangement = Arrangement.spacedBy(Space.sm)) {
-                list.forEach { Pill(it, MaterialTheme.colorScheme.secondaryContainer, MaterialTheme.colorScheme.onSecondaryContainer) }
+                list.forEach { Pill(it, MaterialTheme.colorScheme.primary.copy(alpha = 0.12f), MaterialTheme.colorScheme.primary) }
             }
         }
-        Text("Used to rank you for jobs, with your years of experience.", style = MaterialTheme.typography.bodySmall,
+        Text("Used to rank you for jobs, with your years of experience.", style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
@@ -314,14 +316,14 @@ private fun MenuRow(icon: ImageVector, title: String, subtitle: String?, destruc
             horizontalArrangement = Arrangement.spacedBy(Space.md),
         ) {
             Box(
-                Modifier.size(36.dp).clip(CircleShape).background(
+                Modifier.size(40.dp).clip(CircleShape).background(
                     if (destructive) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.surfaceVariant),
                 contentAlignment = Alignment.Center,
-            ) { Icon(icon, null, tint = tint, modifier = Modifier.size(18.dp)) }
-            Column(Modifier.weight(1f)) {
+            ) { Icon(icon, null, tint = tint, modifier = Modifier.size(20.dp)) }
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Space.xs)) {
                 Text(title, style = MaterialTheme.typography.titleSmall, color = tint)
                 subtitle?.let {
-                    Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
             Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
