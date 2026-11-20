@@ -94,7 +94,7 @@ fun AppTopBar(
 ) {
     TopAppBar(
         title = {
-            Column {
+            Column(verticalArrangement = Arrangement.spacedBy(Space.xs)) {   // title → subtitle 4dp
                 Text(title, style = MaterialTheme.typography.titleLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 subtitle?.let {
                     Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
