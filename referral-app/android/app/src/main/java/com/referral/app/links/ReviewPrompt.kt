@@ -4,8 +4,6 @@ import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
 import com.google.android.play.core.review.ReviewManagerFactory
-import com.google.android.play.core.ktx.launchReview
-import com.google.android.play.core.ktx.requestReview
 import com.referral.app.analytics.Analytics
 
 /**
@@ -20,7 +18,7 @@ object ReviewPrompt {
     private const val KEY_LAST = "last_asked_ms"
     private const val GAP_MS = 90L * 24 * 60 * 60 * 1000
 
-    suspend fun maybeAsk(context: Context, reason: String) {
+    fun maybeAsk(context: Context, reason: String) {
         val activity = context.findActivity() ?: return
         val prefs = activity.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
         val now = System.currentTimeMillis()
@@ -28,9 +26,12 @@ object ReviewPrompt {
         prefs.edit().putLong(KEY_LAST, now).apply()
         runCatching {
             val manager = ReviewManagerFactory.create(activity)
-            val info = manager.requestReview()
-            manager.launchReview(activity, info)
-            Analytics.reviewPrompted(reason)
+            manager.requestReviewFlow().addOnCompleteListener { request ->
+                if (request.isSuccessful && !activity.isFinishing) {
+                    manager.launchReviewFlow(activity, request.result)
+                    Analytics.reviewPrompted(reason)
+                }
+            }
         }
     }
 
