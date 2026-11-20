@@ -290,7 +290,7 @@ fun Pill(
             .background(container)
             .padding(horizontal = Space.md, vertical = Space.xs),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        horizontalArrangement = Arrangement.spacedBy(6.dp),   // icon ↔ text
     ) {
         icon?.let { Icon(it, contentDescription = null, tint = content, modifier = Modifier.size(16.dp)) }
         Text(text, style = MaterialTheme.typography.labelMedium, color = content, maxLines = 1)

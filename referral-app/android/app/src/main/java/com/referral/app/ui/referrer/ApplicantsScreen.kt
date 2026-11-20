@@ -103,7 +103,7 @@ fun ApplicantsScreen(
             }
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(horizontal = Space.screen, vertical = Space.md),
+                contentPadding = PaddingValues(start = Space.screen, end = Space.screen, top = Space.lg, bottom = Space.xl),
                 verticalArrangement = Arrangement.spacedBy(Space.cardGap),
             ) {
                 ui.error?.let { msg -> item { Banner(msg, Tone.ERROR) } }

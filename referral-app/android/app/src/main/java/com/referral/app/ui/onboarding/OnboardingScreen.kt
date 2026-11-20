@@ -45,6 +45,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.referral.app.R
 import com.referral.app.ui.common.CompanyAvatar
 import com.referral.app.ui.common.LightStatusBarIcons
@@ -188,7 +189,7 @@ private fun PageContent(page: TourPage, onSkip: (() -> Unit)?, replay: Boolean) 
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
                 Row(Modifier.fillMaxWidth().height(48.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text(page.eyebrow.uppercase(), style = MaterialTheme.typography.labelMedium,
+                    Text(page.eyebrow.uppercase(), style = MaterialTheme.typography.labelMedium.copy(letterSpacing = 1.sp),   // caps need air
                         color = MaterialTheme.extra.accent, modifier = Modifier.weight(1f))
                     if (onSkip != null) {
                         TextButton(onClick = onSkip) {

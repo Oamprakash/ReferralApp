@@ -86,7 +86,7 @@ fun MyApplicationsScreen(
         }
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(padding),
-            contentPadding = PaddingValues(horizontal = Space.screen, vertical = Space.sm),
+            contentPadding = PaddingValues(start = Space.screen, end = Space.screen, top = Space.lg, bottom = Space.xl),
             verticalArrangement = Arrangement.spacedBy(Space.cardGap),
         ) {
             item { WeeklyQuota(ui.usedThisWeek) }
@@ -182,8 +182,9 @@ private fun ApplicationCard(app: MyApplication, busy: Boolean, onOpen: () -> Uni
 }
 
 /**
- * Applied → Shortlisted → Referred → Offer. Each label is centred under its dot (the first and last
- * are kept inside the card). Interview fills half the line from Referred to Offer. Hidden for ended
+ * Applied → Shortlisted → Referred → Offer. The labels are spread edge to edge with equal gaps
+ * between them (so two labels never run into each other on a narrow phone) and each dot sits
+ * centred above its label. Interview fills half the line from Referred to Offer. Hidden for ended
  * applications (declined, not selected, withdrawn).
  */
 @Composable
@@ -199,59 +200,58 @@ private fun Progress(status: String) {
     val on = MaterialTheme.colorScheme.primary
     val done = MaterialTheme.extra.success
     val off = MaterialTheme.colorScheme.outline      // #CBD5E1 in light: upcoming stages stay visible
+    val ring = MaterialTheme.colorScheme.surface
     val current = kotlin.math.floor(reached).toInt()
-    Column(verticalArrangement = Arrangement.spacedBy(Space.sm)) {
-        Canvas(Modifier.fillMaxWidth().height(16.dp)) {
-            val n = STAGES.size
-            val cell = size.width / n
-            val cy = size.height / 2
-            fun x(i: Float) = cell * (i + 0.5f)
-            // track, then the filled part
-            drawLine(off, Offset(x(0f), cy), Offset(x((n - 1).toFloat()), cy), strokeWidth = 3.dp.toPx(), cap = StrokeCap.Round)
-            if (reached > 0f) {
-                drawLine(on, Offset(x(0f), cy), Offset(x(reached), cy), strokeWidth = 3.dp.toPx(), cap = StrokeCap.Round)
-            }
-            for (i in 0 until n) {
-                val reachedDot = i <= current
-                val color = when {
-                    !reachedDot -> off
-                    i == n - 1 -> done
-                    else -> on
-                }
-                val r = if (i == current) 6.dp.toPx() else 5.dp.toPx()
-                drawCircle(color, radius = r, center = Offset(x(i.toFloat()), cy))
-                if (i == current && i != n - 1) drawCircle(Color.White, radius = 2.dp.toPx(), center = Offset(x(i.toFloat()), cy))
-            }
-        }
-        CenteredLabels(STAGES) { i ->
-            Text(
-                STAGES[i],
-                style = MaterialTheme.typography.labelSmall,
-                fontWeight = if (i == current) FontWeight.Bold else FontWeight.Medium,
-                color = if (i <= current) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1, softWrap = false,
-            )
-        }
-    }
-}
+    val n = STAGES.size
+    // Filled in while measuring, read while drawing (drawing always follows layout)
+    val centres = remember { FloatArray(n) }
 
-/** Places each label centred on its cell (same maths as the dots), nudged in at the edges. */
-@Composable
-private fun CenteredLabels(items: List<String>, label: @Composable (Int) -> Unit) {
     Layout(
-        content = { items.indices.forEach { label(it) } },
+        content = {
+            Canvas(Modifier.fillMaxWidth().height(16.dp)) {
+                val cy = size.height / 2
+                fun x(i: Float): Float {
+                    val lo = kotlin.math.floor(i).toInt().coerceIn(0, n - 1)
+                    val hi = (lo + 1).coerceAtMost(n - 1)
+                    return centres[lo] + (centres[hi] - centres[lo]) * (i - lo)
+                }
+                val stroke = 3.dp.toPx()
+                drawLine(off, Offset(centres[0], cy), Offset(centres[n - 1], cy), strokeWidth = stroke, cap = StrokeCap.Round)
+                if (reached > 0f) drawLine(on, Offset(centres[0], cy), Offset(x(reached), cy), strokeWidth = stroke, cap = StrokeCap.Round)
+                for (i in 0 until n) {
+                    val color = when {
+                        i > current -> off
+                        i == n - 1 -> done
+                        else -> on
+                    }
+                    drawCircle(color, radius = if (i == current) 6.dp.toPx() else 5.dp.toPx(), center = Offset(centres[i], cy))
+                    if (i == current && i != n - 1) drawCircle(ring, radius = 2.dp.toPx(), center = Offset(centres[i], cy))
+                }
+            }
+            STAGES.forEachIndexed { i, label ->
+                Text(
+                    label,
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = if (i == current) FontWeight.Bold else FontWeight.Medium,
+                    color = if (i <= current) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1, softWrap = false,
+                )
+            }
+        },
         modifier = Modifier.fillMaxWidth(),
     ) { measurables, constraints ->
         val width = constraints.maxWidth
-        val cell = width / items.size.toFloat()
-        val placeables = measurables.map { it.measure(Constraints(maxWidth = width)) }
-        val height = placeables.maxOfOrNull { it.height } ?: 0
-        layout(width, height) {
-            placeables.forEachIndexed { i, p ->
-                val centre = cell * (i + 0.5f)
-                val x = (centre - p.width / 2f).toInt().coerceIn(0, (width - p.width).coerceAtLeast(0))
-                p.placeRelative(x, 0)
-            }
+        val labels = measurables.drop(1).map { it.measure(Constraints(maxWidth = width)) }
+        val gap = ((width - labels.sumOf { it.width }) / (n - 1).toFloat()).coerceAtLeast(0f)
+        var x = 0f
+        val xs = labels.map { p -> x.also { x += p.width + gap } }
+        labels.forEachIndexed { i, p -> centres[i] = xs[i] + p.width / 2f }
+        val track = measurables[0].measure(Constraints.fixed(width, 16.dp.roundToPx()))
+        val spacing = Space.sm.roundToPx()
+        val labelHeight = labels.maxOf { it.height }
+        layout(width, track.height + spacing + labelHeight) {
+            track.place(0, 0)
+            labels.forEachIndexed { i, p -> p.place(xs[i].toInt(), track.height + spacing) }
         }
     }
 }
