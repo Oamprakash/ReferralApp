@@ -72,7 +72,7 @@ fun LazyListScope.bestMatchItems(
         }
     }
     items(ui.matches, key = { "m-" + it.id }) { m ->
-        MatchCard(m, ui.myYears, onClick = { onOpenJob(m.id) }, modifier = pad)
+        MatchCard(m, ui.myYears, onClick = { onOpenJob(m.id) }, modifier = pad.padding(bottom = Space.xs))
     }
     if (ui.matches.isNotEmpty()) {
         item {

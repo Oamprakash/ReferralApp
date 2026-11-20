@@ -67,6 +67,8 @@ import com.referral.app.ui.theme.extra
 @Composable
 fun HeroHeader(
     modifier: Modifier = Modifier,
+    spacing: Dp = Space.md,
+    bottomPadding: Dp = Space.lg,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     Column(
@@ -75,8 +77,8 @@ fun HeroHeader(
             .clip(RoundedCornerShape(bottomStart = 28.dp, bottomEnd = 28.dp))
             .background(MaterialTheme.extra.heroGradient)
             .statusBarsPadding()
-            .padding(horizontal = Space.screen, vertical = Space.lg),
-        verticalArrangement = Arrangement.spacedBy(Space.md),
+            .padding(start = Space.screen, end = Space.screen, top = Space.lg, bottom = bottomPadding),
+        verticalArrangement = Arrangement.spacedBy(spacing),
         content = content,
     )
 }
@@ -119,13 +121,15 @@ fun AppCard(
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
     contentPadding: PaddingValues = PaddingValues(Space.lg),
+    /** Gap between the card's rows; 0 for cards that set their own rhythm (JobCard). */
+    spacing: Dp = Space.md,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     val border = BorderStroke(1.dp, MaterialTheme.extra.cardBorder)
     val elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     val inner: @Composable ColumnScope.() -> Unit = {
-        Column(Modifier.padding(contentPadding), verticalArrangement = Arrangement.spacedBy(Space.md), content = content)
+        Column(Modifier.padding(contentPadding), verticalArrangement = Arrangement.spacedBy(spacing), content = content)
     }
     if (onClick != null) {
         Card(onClick = onClick, modifier = modifier.fillMaxWidth(), shape = MaterialTheme.shapes.large,

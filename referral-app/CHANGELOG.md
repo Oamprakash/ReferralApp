@@ -73,6 +73,13 @@ detailed, developer-facing history.
 - Headings: titleLarge 20/24 and slightly tighter tracking; all-caps tour labels get +1sp tracking.
 - 16dp from the screen header to the first card on Applied, My posts and Applicants; 6–8dp between an icon and its text.
 
+**Jobs tab vertical rhythm (spacing review)**
+- Hero: greeting 4 → headline 8 → subtitle (now 16/24) 16 → search, 20dp under the search box.
+- Header → switch 16, switch → chips 16, chips → "Latest openings" 20, title → first card 12, cards 16 apart.
+- Filter chips have a light border and white fill again, so they read as buttons.
+- Job card: 16dp padding; title → company 4, header → where/exp 12, → posted by 8, → salary/active 16.
+- Posted-by line shortened to "Arjun · Verified employee · 2 referrals" so it doesn't cut off.
+
 ## 1.0.2 (versionCode 3)
 
 **User-facing**
