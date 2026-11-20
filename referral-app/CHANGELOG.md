@@ -80,6 +80,12 @@ detailed, developer-facing history.
 - Job card: 16dp padding; title → company 4, header → where/exp 12, → posted by 8, → salary/active 16.
 - Posted-by line shortened to "Arjun · Verified employee · 2 referrals" so it doesn't cut off.
 
+**Applied tab polish**
+- Job titles wrap to 2 lines before "…".
+- Stepper dots evenly spaced, each label centred under its dot (falls back to equal label gaps if <12dp).
+- Footer names the referrer: "Sent to Arjun · Nov 13", "Referred by Arjun · yesterday", "Interview · 2d ago · via Arjun"
+  (needs migration `20261122000000_job_posters_applied.sql`; without it the name is left out).
+
 ## 1.0.2 (versionCode 3)
 
 **User-facing**

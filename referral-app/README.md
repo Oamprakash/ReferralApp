@@ -311,3 +311,5 @@ Work-email verification for employees still uses an emailed code; that's unchang
 Run `supabase db push`, or paste `migrations/20261121000000_job_posters.sql` into the SQL Editor.
 It adds `job_posters()`, which gives the first name and referral count behind each job in the feed.
 Until it's applied the app works as before, just without the "Posted by …" line.
+Also run `migrations/20261122000000_job_posters_applied.sql`: the same function then also answers for jobs you've
+applied to, so the Applied tab can show "Sent to Arjun".

@@ -88,9 +88,25 @@ data class MyApplication(
     @SerialName("jobs") val job: AppliedJob? = null,
 ) {
     /** "Applied 3d ago", "Referred yesterday", "Offer Nov 18": answers "is this stale?". */
-    val activityLabel: String get() = when (status) {
-        "applied", "waitlisted" -> "Applied ${relativeDay(reappliedAt ?: createdAt)}"
-        else -> "${shortStatusLabel(status)} ${relativeDay(updatedAt ?: createdAt)}"
+    val activityLabel: String get() = activityLabel(null)
+
+    /**
+     * With the referrer's first name: "Sent to Arjun · Nov 13", "Referred by Arjun · yesterday",
+     * "Interview · 2d ago · via Arjun". Ended applications leave the name out.
+     */
+    fun activityLabel(referrer: String?): String {
+        val sent = relativeDay(reappliedAt ?: createdAt)
+        val moved = relativeDay(updatedAt ?: createdAt)
+        val name = referrer?.ifBlank { null } ?: return when (status) {
+            "applied", "waitlisted" -> "Applied $sent"
+            else -> "${shortStatusLabel(status)} $moved"
+        }
+        return when (status) {
+            "applied", "waitlisted" -> "Sent to $name · $sent"
+            "shortlisted", "referred" -> "${shortStatusLabel(status)} by $name · $moved"
+            "interview", "offer" -> "${shortStatusLabel(status)} · $moved · via $name"
+            else -> "${shortStatusLabel(status)} $moved"
+        }
     }
     val canWithdraw: Boolean get() = status == "applied" || status == "waitlisted"
     val canReapply: Boolean get() = status == "withdrawn" && reappliedAt == null && job?.status == "active"
