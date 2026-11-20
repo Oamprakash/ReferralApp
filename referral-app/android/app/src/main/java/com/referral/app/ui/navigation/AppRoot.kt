@@ -78,7 +78,7 @@ fun AppRoot(viewModel: RootViewModel = hiltViewModel()) {
         RootState.Loading -> LoadingBox()
         RootState.SignedOut -> if (showTour) OnboardingScreen(onDone = viewModel::finishTour, replay = tourReplay)
             else SignInScreen(onHowItWorks = viewModel::replayTour)
-        is RootState.SignedIn -> SignedInGraph(startAtProfile = s.needsProfile, onSignOut = viewModel::signOut)
+        is RootState.SignedIn -> SignedInGraph(onSignOut = viewModel::signOut)
         is RootState.Suspended -> SuspendedScreen(reason = s.reason, onSignOut = viewModel::signOut)
     }
 }
@@ -104,7 +104,6 @@ private fun NavHostController.switchTab(tab: Tab) = navigate(tab.route) {
 
 @Composable
 private fun SignedInGraph(
-    startAtProfile: Boolean,
     onSignOut: () -> Unit,
     tabsViewModel: TabsViewModel = hiltViewModel(),
 ) {
@@ -170,7 +169,7 @@ private fun SignedInGraph(
         val barPadding = PaddingValues(bottom = inner.calculateBottomPadding())
         NavHost(
             navController = nav,
-            startDestination = if (startAtProfile) ProfileRoute() else HomeRoute,
+            startDestination = HomeRoute,   // browse first; the resume is asked for on Jobs and when applying
             modifier = Modifier.padding(barPadding).consumeWindowInsets(barPadding),
         ) {
             composable<ProfileRoute> { e ->
@@ -198,6 +197,8 @@ private fun SignedInGraph(
                     onOpenJob = { id, from -> openJob(id, from) },
                     onEditProfile = { nav.navigate(ProfileRoute(returnAfterSave = true)) },
                     onProfile = { nav.switchTab(Tab.PROFILE) },
+                    showPostPrompt = !showPosts,
+                    onPostJob = { nav.navigate(PostJobRoute) },
                 )
             }
             composable<MyApplicationsRoute> {

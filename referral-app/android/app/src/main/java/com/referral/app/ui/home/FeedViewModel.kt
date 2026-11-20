@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.referral.app.data.AuthRepository
 import com.referral.app.data.FeedFilter
 import com.referral.app.data.JobRepository
+import com.referral.app.data.OnboardingPrefs
 import com.referral.app.data.ProfileRepository
 import com.referral.app.data.SavedJobs
 import com.referral.app.data.SafetyRepository
@@ -37,6 +38,9 @@ data class FeedUiState(
     val myYears: Int? = null,
     val isAdmin: Boolean = false,
     val firstName: String? = null,
+    /** Null until loaded. False: show the "upload your resume" card (they can browse without it). */
+    val profileComplete: Boolean? = null,
+    val postPromptDismissed: Boolean = false,
     val error: String? = null,
 ) {
     val selectedCompanyName: String?
@@ -52,6 +56,7 @@ class FeedViewModel @Inject constructor(
     private val push: PushRegistrar,
     private val safety: SafetyRepository,
     private val saved: SavedJobs,
+    private val onboarding: OnboardingPrefs,
 ) : ViewModel() {
 
     private val _ui = MutableStateFlow(FeedUiState())
@@ -61,12 +66,14 @@ class FeedViewModel @Inject constructor(
     private var resumedOnce = false
 
     init {
+        _ui.update { it.copy(postPromptDismissed = onboarding.postPromptDismissed) }
         viewModelScope.launch { saved.ids.collect { ids -> _ui.update { it.copy(savedIds = ids) } } }
         load(initial = true)
         viewModelScope.launch {
             runCatching { jobs.companies() }.onSuccess { list -> _ui.update { it.copy(companies = list) } }
             runCatching { profiles.myProfile() }.onSuccess { p ->
-                _ui.update { it.copy(myYears = p?.experienceYears, firstName = p?.fullName?.trim()?.substringBefore(' ')?.ifBlank { null }) }
+                _ui.update { it.copy(myYears = p?.experienceYears, firstName = p?.fullName?.trim()?.substringBefore(' ')?.ifBlank { null },
+                    profileComplete = p?.isComplete == true) }
             }
             runCatching { safety.amIAdmin() }.onSuccess { a -> _ui.update { it.copy(isAdmin = a) } }
         }
@@ -76,7 +83,20 @@ class FeedViewModel @Inject constructor(
 
     /** Refresh quietly when returning to the feed (after applying or posting); skips the first resume. */
     fun onResume() {
-        if (resumedOnce) load(initial = false) else resumedOnce = true
+        if (resumedOnce) {
+            load(initial = false)
+            // They may have just uploaded a resume from Profile
+            viewModelScope.launch {
+                runCatching { profiles.myProfile() }.onSuccess { p ->
+                    _ui.update { it.copy(myYears = p?.experienceYears, profileComplete = p?.isComplete == true) }
+                }
+            }
+        } else resumedOnce = true
+    }
+
+    fun dismissPostPrompt() {
+        onboarding.dismissPostPrompt()
+        _ui.update { it.copy(postPromptDismissed = true) }
     }
 
     fun onQuery(q: String) = setFilter(debounce = true) { it.copy(query = q.take(60)) }

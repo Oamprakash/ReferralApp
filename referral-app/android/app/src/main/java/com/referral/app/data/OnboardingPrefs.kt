@@ -14,5 +14,13 @@ class OnboardingPrefs @Inject constructor(@ApplicationContext context: Context) 
 
     fun markSeen() = prefs.edit().putBoolean(KEY_SEEN, true).apply()
 
-    private companion object { const val KEY_SEEN = "tour_seen_v1" }
+    /** "Not now" on the Jobs-tab card that invites employees to post openings. */
+    val postPromptDismissed: Boolean get() = prefs.getBoolean(KEY_POST_PROMPT, false)
+
+    fun dismissPostPrompt() = prefs.edit().putBoolean(KEY_POST_PROMPT, true).apply()
+
+    private companion object {
+        const val KEY_SEEN = "tour_seen_v1"
+        const val KEY_POST_PROMPT = "post_prompt_dismissed_v1"
+    }
 }
