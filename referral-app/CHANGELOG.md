@@ -103,8 +103,9 @@ Play "What's new": `store/whatsnew/whatsnew-en-US`.
 - Bookmark in the top bar next to Share; 1dp line above the bottom bar instead of a shadow.
 
 **Small fixes**
-- Match colours in three tiers (MatchTier), no red: strong green (ring 65+, bar ≥70%), moderate amber
+- Match colours in three tiers (MatchTier), no red: strong emerald-teal `#0F766E` (ring 65+, bar ≥70%), moderate amber
   (ring 40–64, bar 40–69%), low slate (below). Same on the score ring, the applicant match badge and the bars.
+- Best matches: the one-line summary hides while the score breakdown is open (no repeated text).
 - Profile menu cards no longer get extra gaps between rows (#33).
 - 4dp between a screen title and its subtitle (#34).
 - My posts status pill lines up with the title's first line (#35).

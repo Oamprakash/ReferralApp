@@ -106,12 +106,17 @@ private fun MatchCard(m: JobMatch, myYears: Int?, onClick: () -> Unit, modifier:
             // One line at a glance; the full breakdown opens on tap.
             var open by rememberSaveable(m.id) { mutableStateOf(false) }
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    matchSummary(m, myYears),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.weight(1f),
-                )
+                // Summary only while collapsed: the bars below say the same thing in detail
+                if (open) {
+                    Text("Score breakdown", style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
+                } else {
+                    Text(
+                        matchSummary(m, myYears),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
                 SmallButton(if (open) "Hide" else "Why this score", { open = !open })
             }
             if (open) {

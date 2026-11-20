@@ -12,7 +12,7 @@ import androidx.compose.ui.graphics.luminance
  *
  * | Tier     | Ring (0–100) | Bar (0–50)   | Colour |
  * |----------|--------------|--------------|--------|
- * | Strong   | 65–100       | 35–50 (≥70%) | green  |
+ * | Strong   | 65–100       | 35–50 (≥70%) | emerald-teal (in the brand family) |
  * | Moderate | 40–64        | 20–34 (≥40%) | amber  |
  * | Low      | 0–39         | 0–19         | slate  |
  */
@@ -46,12 +46,13 @@ data class TierColors(val text: Color, val bar: Color, val track: Color)
 fun MatchTier.colors(): TierColors {
     val dark = MaterialTheme.colorScheme.background.luminance() < 0.5f
     return if (!dark) when (this) {
-        MatchTier.STRONG -> TierColors(Color(0xFF15803D), Color(0xFF15803D), Color(0xFFDCFCE7))
+        // Emerald-teal rather than grass green, so it sits with the brand teal (Hide, nav, links)
+        MatchTier.STRONG -> TierColors(Color(0xFF0F766E), Color(0xFF0F766E), Color(0xFFCCF5EF))
         MatchTier.MODERATE -> TierColors(Color(0xFFB45309), Color(0xFFD97706), Color(0xFFFEF3C7))
         MatchTier.LOW -> TierColors(Color(0xFF475569), Color(0xFF64748B), Color(0xFFE2E8F0))
     } else when (this) {
         // Same hues, lightened for the dark background
-        MatchTier.STRONG -> TierColors(Color(0xFF4ADE80), Color(0xFF4ADE80), Color(0xFF143D26))
+        MatchTier.STRONG -> TierColors(Color(0xFF2DD4BF), Color(0xFF2DD4BF), Color(0xFF134E4A))
         MatchTier.MODERATE -> TierColors(Color(0xFFFCD34D), Color(0xFFF59E0B), Color(0xFF4A3410))
         MatchTier.LOW -> TierColors(Color(0xFFB4C0D0), Color(0xFF94A3B8), Color(0xFF243146))
     }
