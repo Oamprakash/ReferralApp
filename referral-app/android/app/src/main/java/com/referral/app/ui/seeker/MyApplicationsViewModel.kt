@@ -18,6 +18,8 @@ import javax.inject.Inject
 data class MyApplicationsUiState(
     val loading: Boolean = true,
     val applications: List<MyApplication> = emptyList(),
+    /** Referrer first name per job id; filled after the list, missing ones just show no name. */
+    val referrers: Map<String, String> = emptyMap(),
     val busyId: String? = null,
     val error: String? = null,
 ) {
@@ -40,7 +42,15 @@ class MyApplicationsViewModel @Inject constructor(
     fun load() {
         viewModelScope.launch {
             runCatching { jobs.myApplications() }
-                .onSuccess { list -> _ui.update { it.copy(loading = false, applications = list, error = null) } }
+                .onSuccess { list ->
+                    _ui.update { it.copy(loading = false, applications = list, error = null) }
+                    runCatching { jobs.posters(list.map { it.jobId }.distinct()) }
+                        .onSuccess { p ->
+                            val names = p.mapNotNull { (id, poster) -> poster.firstName?.ifBlank { null }?.let { id to it } }.toMap()
+                            _ui.update { it.copy(referrers = it.referrers + names) }
+                        }
+                        .onFailure { e -> Log.w("MyApplications", "Referrer names failed", e) }
+                }
                 .onFailure { e ->
                     Log.e("MyApplications", "Load failed", e)
                     _ui.update { it.copy(loading = false, error = "Couldn't load your applications.") }

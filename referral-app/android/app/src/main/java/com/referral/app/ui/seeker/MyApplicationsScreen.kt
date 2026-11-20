@@ -104,6 +104,7 @@ fun MyApplicationsScreen(
             items(ui.applications, key = { it.id }) { app ->
                 ApplicationCard(
                     app = app,
+                    referrer = ui.referrers[app.jobId],
                     busy = ui.busyId == app.id,
                     onOpen = { onOpenJob(app.jobId) },
                     onWithdraw = {
@@ -147,13 +148,14 @@ private fun WeeklyQuota(used: Int) {
 private val STAGES = listOf("Applied", "Shortlisted", "Referred", "Offer")
 
 @Composable
-private fun ApplicationCard(app: MyApplication, busy: Boolean, onOpen: () -> Unit, onWithdraw: () -> Unit) {
+private fun ApplicationCard(app: MyApplication, referrer: String?, busy: Boolean, onOpen: () -> Unit, onWithdraw: () -> Unit) {
     val company = app.job?.company?.name ?: "Company"
     AppCard(onClick = onOpen) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.md)) {
+        Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(Space.md)) {
             CompanyAvatar(company, size = 40.dp)
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Space.xs)) {
-                Text(app.job?.title ?: "Job", style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                // Two lines before "…", so senior titles ("Engineering Manager, Mobile") show in full
+                Text(app.job?.title ?: "Job", style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 Text(
                     listOfNotNull(company, if (app.job?.status == "closed") "role closed" else null).joinToString(" · "),
                     style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -171,9 +173,10 @@ private fun ApplicationCard(app: MyApplication, busy: Boolean, onOpen: () -> Uni
         // Footer: when it last moved, and the way in
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Text(
-                app.activityLabel,
+                app.activityLabel(referrer),
                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.weight(1f),
+                maxLines = 1, overflow = TextOverflow.Ellipsis,
             )
             if (app.canReapply) SmallButton("Apply again", onOpen, filled = true)   // the job screen has the reapply button
             else SmallButton("View details", onOpen)
@@ -182,9 +185,10 @@ private fun ApplicationCard(app: MyApplication, busy: Boolean, onOpen: () -> Uni
 }
 
 /**
- * Applied → Shortlisted → Referred → Offer. The labels are spread edge to edge with equal gaps
- * between them (so two labels never run into each other on a narrow phone) and each dot sits
- * centred above its label. Interview fills half the line from Referred to Offer. Hidden for ended
+ * Applied → Shortlisted → Referred → Offer. Dots are evenly spaced, with the first and last
+ * pulled in just far enough that "Applied" and "Offer" end at the card edges; every label is
+ * centred under its own dot. If that would leave less than 12dp between two labels (very large
+ * font sizes), the labels are spread with equal gaps instead and the dots follow them. Interview fills half the line from Referred to Offer. Hidden for ended
  * applications (declined, not selected, withdrawn).
  */
 @Composable
@@ -242,9 +246,21 @@ private fun Progress(status: String) {
     ) { measurables, constraints ->
         val width = constraints.maxWidth
         val labels = measurables.drop(1).map { it.measure(Constraints(maxWidth = width)) }
-        val gap = ((width - labels.sumOf { it.width }) / (n - 1).toFloat()).coerceAtLeast(0f)
-        var x = 0f
-        val xs = labels.map { p -> x.also { x += p.width + gap } }
+        // Evenly spaced dots between the half-widths of the end labels
+        val first = labels.first().width / 2f
+        val last = width - labels.last().width / 2f
+        val even = FloatArray(n) { i -> first + (last - first) * i / (n - 1) }
+        val minGap = 12.dp.toPx()
+        val fits = (0 until n - 1).all { i ->
+            (even[i + 1] - labels[i + 1].width / 2f) - (even[i] + labels[i].width / 2f) >= minGap
+        }
+        val xs: List<Float> = if (fits) {
+            labels.mapIndexed { i, p -> even[i] - p.width / 2f }
+        } else {
+            val gap = ((width - labels.sumOf { it.width }) / (n - 1).toFloat()).coerceAtLeast(0f)
+            var x = 0f
+            labels.map { p -> x.also { x += p.width + gap } }
+        }
         labels.forEachIndexed { i, p -> centres[i] = xs[i] + p.width / 2f }
         val track = measurables[0].measure(Constraints.fixed(width, 16.dp.roundToPx()))
         val spacing = Space.sm.roundToPx()
