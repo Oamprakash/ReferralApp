@@ -7,9 +7,11 @@ import com.referral.app.data.AuthRepository
 import com.referral.app.data.FeedFilter
 import com.referral.app.data.JobRepository
 import com.referral.app.data.ProfileRepository
+import com.referral.app.data.SavedJobs
 import com.referral.app.data.SafetyRepository
 import com.referral.app.data.model.CompanyOption
 import com.referral.app.data.model.Job
+import com.referral.app.data.model.JobPoster
 import com.referral.app.push.PushRegistrar
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
@@ -27,6 +29,9 @@ data class FeedUiState(
     val refreshing: Boolean = false,
     val jobs: List<Job> = emptyList(),
     val appliedJobIds: Set<String> = emptySet(),
+    val savedIds: Set<String> = emptySet(),
+    /** Who posted each job (first name, referrals made). Missing entries just hide the line. */
+    val posters: Map<String, JobPoster> = emptyMap(),
     val filter: FeedFilter = FeedFilter(),
     val companies: List<CompanyOption> = emptyList(),
     val myYears: Int? = null,
@@ -46,6 +51,7 @@ class FeedViewModel @Inject constructor(
     private val auth: AuthRepository,
     private val push: PushRegistrar,
     private val safety: SafetyRepository,
+    private val saved: SavedJobs,
 ) : ViewModel() {
 
     private val _ui = MutableStateFlow(FeedUiState())
@@ -55,6 +61,7 @@ class FeedViewModel @Inject constructor(
     private var resumedOnce = false
 
     init {
+        viewModelScope.launch { saved.ids.collect { ids -> _ui.update { it.copy(savedIds = ids) } } }
         load(initial = true)
         viewModelScope.launch {
             runCatching { jobs.companies() }.onSuccess { list -> _ui.update { it.copy(companies = list) } }
@@ -86,6 +93,14 @@ class FeedViewModel @Inject constructor(
 
     fun clearFilters() = setFilter { FeedFilter() }
 
+    fun toggleSavedOnly() = setFilter { it.copy(savedIds = if (it.savedIds != null) null else saved.ids.value) }
+
+    fun toggleSaved(jobId: String) {
+        saved.toggle(jobId)
+        // In the Saved view, an unsaved job drops out right away
+        if (_ui.value.filter.savedIds != null) setFilter { it.copy(savedIds = saved.ids.value) }
+    }
+
     private fun setFilter(debounce: Boolean = false, change: (FeedFilter) -> FeedFilter) {
         _ui.update { it.copy(filter = change(it.filter)) }
         load(initial = false, debounceMs = if (debounce) 350 else 0)
@@ -102,6 +117,10 @@ class FeedViewModel @Inject constructor(
                 list to applied
             }.onSuccess { (list, applied) ->
                 _ui.update { it.copy(loading = false, refreshing = false, jobs = list, appliedJobIds = applied) }
+                // Poster names come second so the list never waits on them
+                runCatching { jobs.posters(list.map { it.id }) }
+                    .onSuccess { p -> _ui.update { it.copy(posters = it.posters + p) } }
+                    .onFailure { e -> if (e is kotlinx.coroutines.CancellationException) throw e; Log.w(TAG, "Posters failed", e) }
             }.onFailure { e ->
                 if (e is kotlinx.coroutines.CancellationException) throw e
                 Log.e(TAG, "Feed load failed", e)   // full cause in Logcat, filter by "Feed"

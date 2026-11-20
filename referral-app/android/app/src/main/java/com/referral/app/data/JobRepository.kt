@@ -5,6 +5,7 @@ import com.referral.app.data.model.CompanyOption
 import com.referral.app.data.model.Job
 import com.referral.app.data.model.JobDetail
 import com.referral.app.data.model.JobMatch
+import com.referral.app.data.model.JobPoster
 import kotlinx.serialization.builtins.ListSerializer
 import com.referral.app.data.model.MyApplication
 import io.github.jan.supabase.SupabaseClient
@@ -14,6 +15,8 @@ import io.github.jan.supabase.postgrest.query.Columns
 import io.github.jan.supabase.postgrest.query.Order
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -28,8 +31,12 @@ data class FeedFilter(
     val workModes: Set<String> = emptySet(),     // "onsite", "hybrid", "remote"
     val companyId: String? = null,
     val fitsYears: Int? = null,                  // set = only jobs whose range includes these years
+    val savedIds: Set<String>? = null,           // set = only these jobs (the "Saved" filter)
 ) {
-    val isActive get() = query.isNotBlank() || workModes.isNotEmpty() || companyId != null || fitsYears != null
+    val isActive get() = query.isNotBlank() || workModes.isNotEmpty() || companyId != null || fitsYears != null ||
+        savedIds != null
+    /** Filters other than the search box, for the badge on the filter button. */
+    val filterCount get() = workModes.size + listOf(companyId, fitsYears, savedIds).count { it != null }
 }
 
 sealed class ApplyException(message: String) : Exception(message) {
@@ -51,14 +58,32 @@ class JobRepository @Inject constructor(
     /** Active posts confirmed within 14 days, freshest first, narrowed by [filter]. */
     suspend fun feed(filter: FeedFilter = FeedFilter(), limit: Long = 50): List<Job> {
         val cutoff = Instant.now().minus(FRESHNESS_DAYS, ChronoUnit.DAYS).toString()
+        if (filter.savedIds != null && filter.savedIds.isEmpty()) return emptyList()
+        // Search matches the title, the company name, or a listed skill.
+        val q = filter.query.trim().filterNot { it in "%_*,(){}\"\\" }.take(60)
+        val companyIds = if (q.isEmpty()) emptyList() else runCatching {
+            supabase.from("companies").select(Columns.list("id", "name")) {
+                filter { ilike("name", "%$q%") }
+                limit(20)
+            }.decodeList<CompanyOption>().map { it.id }
+        }.getOrDefault(emptyList())
+        val skillForms = if (q.isEmpty()) emptyList() else listOf(
+            q, q.lowercase(), q.uppercase(),
+            q.split(' ').joinToString(" ") { w -> w.lowercase().replaceFirstChar { it.uppercase() } },
+        ).distinct()
         return supabase.from("jobs")
             .select(Columns.raw(FEED_COLUMNS)) {
                 filter {
                     eq("status", "active")
                     gt("last_confirmed_at", cutoff)
-                    if (filter.query.isNotBlank()) {
-                        ilike("title", "%${filter.query.trim().replace("%", "").replace("_", "")}%")
+                    if (q.isNotEmpty()) {
+                        or {
+                            ilike("title", "%$q%")
+                            if (companyIds.isNotEmpty()) isIn("company_id", companyIds)
+                            ov("skills", skillForms)
+                        }
                     }
+                    filter.savedIds?.let { isIn("id", it.toList()) }
                     if (filter.workModes.isNotEmpty()) isIn("work_mode", filter.workModes.toList())
                     filter.companyId?.let { eq("company_id", it) }
                     filter.fitsYears?.let { years ->
@@ -78,6 +103,16 @@ class JobRepository @Inject constructor(
             ListSerializer(JobMatch.serializer()),
             supabase.postgrest.rpc("best_matches", buildJsonObject { put("p_limit", limit) }).data,
         )
+
+    /** First name and referral count of each job's poster. Empty if the database function isn't there yet. */
+    suspend fun posters(jobIds: List<String>): Map<String, JobPoster> {
+        if (jobIds.isEmpty()) return emptyMap()
+        val body = supabase.postgrest.rpc(
+            "job_posters",
+            buildJsonObject { put("p_jobs", JsonArray(jobIds.take(100).map { JsonPrimitive(it) })) },
+        ).data
+        return json.decodeFromString(ListSerializer(JobPoster.serializer()), body).associateBy { it.jobId }
+    }
 
     suspend fun companies(): List<CompanyOption> =
         supabase.from("companies").select(Columns.list("id", "name")) {

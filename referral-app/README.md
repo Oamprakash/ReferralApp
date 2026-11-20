@@ -305,3 +305,9 @@ Phone (SMS code) sign-in was removed; everyone signs in with Google. In the Supa
 
 Work-email verification for employees still uses an emailed code; that's unchanged.
 
+
+## Referrer line on job cards
+
+Run `supabase db push`, or paste `migrations/20261121000000_job_posters.sql` into the SQL Editor.
+It adds `job_posters()`, which gives the first name and referral count behind each job in the feed.
+Until it's applied the app works as before, just without the "Posted by …" line.

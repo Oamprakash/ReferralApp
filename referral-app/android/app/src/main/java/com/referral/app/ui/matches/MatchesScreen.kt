@@ -4,21 +4,16 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -28,11 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.LifecycleResumeEffect
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.referral.app.data.model.JobMatch
-import com.referral.app.ui.common.AppTopBar
 import com.referral.app.ui.common.Banner
 import com.referral.app.ui.common.EmptyState
 import com.referral.app.ui.common.JobCard
@@ -45,77 +36,59 @@ import com.referral.app.ui.common.Tone
 import com.referral.app.ui.theme.Space
 import com.referral.app.ui.theme.extra
 
-@OptIn(ExperimentalMaterial3Api::class)   // PullToRefreshBox / scrollable tab row
-@Composable
-fun MatchesScreen(
+/**
+ * The "Best matches" view inside the Jobs tab (it used to be its own "For you" tab): open roles ranked
+ * by the user's skills and experience. Items go straight into the Jobs list.
+ */
+fun LazyListScope.bestMatchItems(
+    ui: MatchesUiState,
     onOpenJob: (String) -> Unit,
     onEditProfile: () -> Unit,
-    viewModel: MatchesViewModel = hiltViewModel(),
 ) {
-    val ui by viewModel.ui.collectAsStateWithLifecycle()
-
-    LifecycleResumeEffect(Unit) {
-        viewModel.load()
-        onPauseOrDispose { }
+    val pad = Modifier.padding(horizontal = Space.screen)
+    if (ui.loading) {
+        item { LoadingBox(Modifier.padding(top = 60.dp)) }
+        return
     }
-
-    Scaffold(
-        topBar = { AppTopBar("For you", subtitle = "Open roles ranked by your skills and experience") },
-        containerColor = MaterialTheme.colorScheme.background,
-    ) { padding ->
-        PullToRefreshBox(
-            isRefreshing = ui.refreshing,
-            onRefresh = viewModel::load,
-            modifier = Modifier.fillMaxSize().padding(padding),
-        ) {
-            if (ui.loading) {
-                LoadingBox()
-                return@PullToRefreshBox
-            }
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(horizontal = Space.screen, vertical = Space.sm),
-                verticalArrangement = Arrangement.spacedBy(Space.md),
-            ) {
-                ui.error?.let { m -> item { Banner(m, Tone.ERROR) } }
-                if (ui.profileThin) {
-                    item {
-                        Banner(
-                            "Add skills to your profile, or upload your resume, for sharper matches.",
-                            Tone.WARNING,
-                            action = { SmallButton("Update profile", onEditProfile) },
-                        )
-                    }
-                }
-                if (ui.error == null && ui.matches.isEmpty()) {
-                    item {
-                        EmptyState(
-                            icon = Icons.Filled.Star,
-                            title = "No matches yet",
-                            body = "Nothing open fits your profile right now. New posts come in every day.",
-                            action = { SmallButton("Update profile", onEditProfile, filled = true) },
-                        )
-                    }
-                }
-                items(ui.matches, key = { it.id }) { m -> MatchCard(m, ui.myYears, onClick = { onOpenJob(m.id) }) }
-                if (ui.matches.isNotEmpty()) {
-                    item {
-                        Text(
-                            "Same score referrers see when you apply: up to 50 for experience fit, up to 50 for skills.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(vertical = Space.sm),
-                        )
-                    }
-                }
-            }
+    ui.error?.let { m -> item { Banner(m, Tone.ERROR, pad) } }
+    if (ui.profileThin) {
+        item {
+            Banner(
+                "Add skills to your profile, or upload your resume, for sharper matches.",
+                Tone.WARNING,
+                pad,
+                action = { SmallButton("Update profile", onEditProfile) },
+            )
+        }
+    }
+    if (ui.error == null && ui.matches.isEmpty()) {
+        item {
+            EmptyState(
+                icon = Icons.Filled.Star,
+                title = "No matches yet",
+                body = "Nothing open fits your profile right now. New posts come in every day.",
+                action = { SmallButton("Update profile", onEditProfile, filled = true) },
+            )
+        }
+    }
+    items(ui.matches, key = { "m-" + it.id }) { m ->
+        MatchCard(m, ui.myYears, onClick = { onOpenJob(m.id) }, modifier = pad)
+    }
+    if (ui.matches.isNotEmpty()) {
+        item {
+            Text(
+                "Same score referrers see when you apply: up to 50 for experience fit, up to 50 for skills.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = Space.screen, vertical = Space.sm),
+            )
         }
     }
 }
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun MatchCard(m: JobMatch, myYears: Int?, onClick: () -> Unit) {
+private fun MatchCard(m: JobMatch, myYears: Int?, onClick: () -> Unit, modifier: Modifier = Modifier) {
     JobCard(
         title = m.title,
         company = m.companyName,
@@ -123,8 +96,9 @@ private fun MatchCard(m: JobMatch, myYears: Int?, onClick: () -> Unit) {
         experience = m.experienceLabel,
         workMode = m.workModeLabel,
         salary = m.salaryRange,
-        freshness = null,
+        freshness = m.activeLabel,
         onClick = onClick,
+        modifier = modifier,
         badge = { ScoreRing(m.score) },
         footer = {
             // One line at a glance; the full breakdown opens on tap.

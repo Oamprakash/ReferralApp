@@ -22,6 +22,7 @@ data class Job(
 ) {
     val companyName: String get() = company?.name ?: "Unknown company"
     val confirmedLabel: String get() = confirmedLabel(lastConfirmedAt)
+    val activeLabel: String get() = activeLabel(lastConfirmedAt)
     val experienceLabel: String get() = experienceLabel(expMin, expMax)
     val workModeLabel: String get() = workMode.replaceFirstChar { it.uppercase() }
 }
@@ -123,6 +124,22 @@ internal fun confirmedLabel(lastConfirmedAt: String): String {
     }
 }
 
+/** Short form for cards: "Active today", "Active 3d ago". */
+internal fun activeLabel(lastConfirmedAt: String): String {
+    val days = runCatching {
+        Duration.between(OffsetDateTime.parse(lastConfirmedAt), OffsetDateTime.now()).toDays()
+    }.getOrDefault(0)
+    return if (days <= 0L) "Active today" else "Active ${days}d ago"
+}
+
+/** Who posted a job, for the feed card. From job_posters(): first name only, plus their referral count. */
+@Serializable
+data class JobPoster(
+    @SerialName("job_id") val jobId: String,
+    @SerialName("first_name") val firstName: String? = null,
+    val referred: Int = 0,
+)
+
 internal fun experienceLabel(min: Int, max: Int): String =
     if (min == 0 && max <= 1) "Fresher" else "$min–$max yrs"
 
@@ -147,6 +164,7 @@ data class JobMatch(
     val experienceLabel: String get() = experienceLabel(expMin, expMax)
     val workModeLabel: String get() = workMode.replaceFirstChar { it.uppercase() }
     val confirmedLabel: String get() = confirmedLabel(lastConfirmedAt)
+    val activeLabel: String get() = activeLabel(lastConfirmedAt)
 
     /** Skills half of the score, as in match_score: share of the post's skills you have (25 if none listed). */
     val skillPoints: Int
