@@ -3,8 +3,6 @@ package com.referral.app.ui.common
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.size
@@ -25,15 +23,14 @@ import com.referral.app.ui.theme.Space
 import com.referral.app.ui.theme.extra
 
 /**
- * The job card used by the feed, Best matches and My applications.
- * [badge] sits top-right (match %, Applied, status); [footer] goes under a divider.
+ * The job card used by the feed and For you. Kept to a few things at a glance: title, company,
+ * one line of where/experience/mode, and salary + freshness. Team, skills and the rest are on the
+ * job screen. [badge] sits top-right (match score, Applied); [footer] goes under a divider.
  */
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun JobCard(
     title: String,
     company: String,
-    team: String?,
     location: String,
     experience: String,
     workMode: String,
@@ -50,7 +47,7 @@ fun JobCard(
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(title, style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 Text(
-                    listOfNotNull(company, team?.ifBlank { null }).joinToString(" · "),
+                    company,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1, overflow = TextOverflow.Ellipsis,
@@ -58,10 +55,16 @@ fun JobCard(
             }
             badge?.invoke()
         }
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            MetaPill(location, icon = Icons.Filled.LocationOn)
-            MetaPill(experience)
-            MetaPill(workMode)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(Icons.Filled.LocationOn, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(16.dp))
+            Spacer(Modifier.width(4.dp))
+            Text(
+                listOf(location, experience, workMode).filter { it.isNotBlank() }.joinToString(" · "),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1, overflow = TextOverflow.Ellipsis,
+            )
         }
         if (salary != null || freshness != null) {
             Row(verticalAlignment = Alignment.CenterVertically) {

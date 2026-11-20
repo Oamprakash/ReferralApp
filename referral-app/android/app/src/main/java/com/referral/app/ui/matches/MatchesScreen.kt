@@ -21,6 +21,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.StrokeCap
@@ -116,7 +119,6 @@ private fun MatchCard(m: JobMatch, myYears: Int?, onClick: () -> Unit) {
     JobCard(
         title = m.title,
         company = m.companyName,
-        team = m.team,
         location = m.location,
         experience = m.experienceLabel,
         workMode = m.workModeLabel,
@@ -125,12 +127,25 @@ private fun MatchCard(m: JobMatch, myYears: Int?, onClick: () -> Unit) {
         onClick = onClick,
         badge = { ScoreRing(m.score) },
         footer = {
-            ScoreBar("Skills", m.skillPoints, skillsCaption(m))
-            ScoreBar("Experience", m.experiencePoints(myYears), experienceCaption(m, myYears))
-            if (m.have.isNotEmpty() || m.missing.isNotEmpty()) {
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    m.have.forEach { Pill("✓ $it", MaterialTheme.extra.successContainer, MaterialTheme.extra.onSuccessContainer) }
-                    m.missing.forEach { Pill(it, MaterialTheme.colorScheme.surfaceVariant, MaterialTheme.colorScheme.onSurfaceVariant) }
+            // One line at a glance; the full breakdown opens on tap.
+            var open by rememberSaveable(m.id) { mutableStateOf(false) }
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    matchSummary(m, myYears),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.weight(1f),
+                )
+                SmallButton(if (open) "Hide" else "Why this score", { open = !open })
+            }
+            if (open) {
+                ScoreBar("Skills", m.skillPoints, skillsCaption(m))
+                ScoreBar("Experience", m.experiencePoints(myYears), experienceCaption(m, myYears))
+                if (m.have.isNotEmpty() || m.missing.isNotEmpty()) {
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        m.have.forEach { Pill("✓ $it", MaterialTheme.extra.successContainer, MaterialTheme.extra.onSuccessContainer) }
+                        m.missing.forEach { Pill(it, MaterialTheme.colorScheme.surfaceVariant, MaterialTheme.colorScheme.onSurfaceVariant) }
+                    }
                 }
             }
         },
@@ -161,6 +176,18 @@ private fun ScoreBar(label: String, points: Int, caption: String) {
         )
         Text(caption, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
+}
+
+private fun matchSummary(m: JobMatch, years: Int?): String {
+    val total = m.have.size + m.missing.size
+    val skills = if (total == 0) null else "${m.have.size} of $total skills"
+    val exp = when {
+        years == null -> null
+        m.experiencePoints(years) == 50 -> "experience fits"
+        years > m.expMax -> "above the experience range"
+        else -> "below the experience range"
+    }
+    return listOfNotNull(skills, exp).joinToString(" · ").ifEmpty { "Tap for the score breakdown" }
 }
 
 private fun skillsCaption(m: JobMatch): String {

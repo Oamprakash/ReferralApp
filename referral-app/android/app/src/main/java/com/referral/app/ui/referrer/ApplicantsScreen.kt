@@ -41,6 +41,8 @@ import com.referral.app.data.ReportReason
 import com.referral.app.data.model.Applicant
 import com.referral.app.data.model.applicationStatusLabel
 import com.referral.app.ui.common.AppCard
+import com.referral.app.ui.common.CardMenu
+import com.referral.app.ui.common.MenuAction
 import com.referral.app.ui.common.AppTopBar
 import com.referral.app.ui.common.Banner
 import com.referral.app.ui.common.ConfirmDialog
@@ -223,8 +225,12 @@ private fun ApplicantCard(
         StatusPill(applicant.status, applicationStatusLabel(applicant.status))
         if (!p?.skills.isNullOrEmpty()) {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                p!!.skills.take(8).forEach {
+                // A few skills at a glance; the resume has the rest.
+                p!!.skills.take(3).forEach {
                     Pill(it, MaterialTheme.colorScheme.surfaceVariant, MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                if (p.skills.size > 3) {
+                    Pill("+${p.skills.size - 3}", MaterialTheme.colorScheme.surfaceVariant, MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         }
@@ -242,18 +248,25 @@ private fun ApplicantCard(
             }
         }
 
-        FlowRow(   // wraps on narrow phones
-            horizontalArrangement = Arrangement.spacedBy(Space.xs),
-            verticalArrangement = Arrangement.spacedBy(Space.xs),
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            applicant.nextSteps.forEachIndexed { i, (status, label) ->
-                SmallButton(label, { onStep(status) }, enabled = !busy, filled = i == 0,
+        // The next step is the main action; other steps and Report are in the ⋮ menu.
+        val main = applicant.nextSteps.firstOrNull()
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            main?.let { (status, label) ->
+                SmallButton(label, { onStep(status) }, enabled = !busy, filled = true,
                     destructive = status == "declined" || status == "not_selected")
             }
             SmallButton("Resume", onResume, enabled = !busy)
             if (applicant.status in CONTACT_STATUSES) SmallButton("Contact", onContact, enabled = !busy)
-            if (applicant.seekerId != null) SmallButton("Report", onReport, enabled = !busy, destructive = true)
+            androidx.compose.foundation.layout.Spacer(Modifier.weight(1f))
+            CardMenu(
+                buildList {
+                    applicant.nextSteps.drop(1).forEach { (status, label) ->
+                        add(MenuAction(label, destructive = status == "declined" || status == "not_selected") { onStep(status) })
+                    }
+                    if (applicant.seekerId != null) add(MenuAction("Report", destructive = true, onClick = onReport))
+                },
+                enabled = !busy,
+            )
         }
     }
 }
