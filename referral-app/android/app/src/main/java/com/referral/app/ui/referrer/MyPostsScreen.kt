@@ -2,6 +2,9 @@ package com.referral.app.ui.referrer
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -202,7 +205,9 @@ private fun PostCard(
     val needsConfirm = open && look.label != "Live"
 
     AppCard(onClick = onApplicants) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        // Pill and ⋮ line up with the first line of the title (not the middle of title + location),
+        // with 8dp between the title and the pill
+        Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(Space.sm)) {
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Space.xs)) {
                 Text(post.title, style = MaterialTheme.typography.titleMedium)
                 Text(
@@ -210,6 +215,11 @@ private fun PostCard(
                     style = MaterialTheme.typography.bodyMedium, color = c.onSurfaceVariant,
                 )
             }
+            Row(
+                // the ⋮ button is 48dp tall; pull it up so its centre (and the pill's) sits on the 24dp title line
+                Modifier.offset(y = (-12).dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
             Pill(look.label, look.bg, look.fg)
             // Close (and the less common actions) live up here, away from the main buttons
             if (post.status != "closed") {
@@ -222,6 +232,9 @@ private fun PostCard(
                     },
                     enabled = !busy,
                 )
+            } else {
+                Spacer(Modifier.height(48.dp))   // keeps the pill on the title line without a menu
+            }
             }
         }
         look.note?.let {
