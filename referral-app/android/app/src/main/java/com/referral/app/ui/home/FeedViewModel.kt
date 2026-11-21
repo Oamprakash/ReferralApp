@@ -35,6 +35,7 @@ data class FeedUiState(
     val posters: Map<String, JobPoster> = emptyMap(),
     val filter: FeedFilter = FeedFilter(),
     val companies: List<CompanyOption> = emptyList(),
+    val locations: List<String> = emptyList(),
     val myYears: Int? = null,
     val isAdmin: Boolean = false,
     val firstName: String? = null,
@@ -71,6 +72,7 @@ class FeedViewModel @Inject constructor(
         load(initial = true)
         viewModelScope.launch {
             runCatching { jobs.companies() }.onSuccess { list -> _ui.update { it.copy(companies = list) } }
+            runCatching { jobs.openLocations() }.onSuccess { list -> _ui.update { it.copy(locations = list) } }
             runCatching { profiles.myProfile() }.onSuccess { p ->
                 _ui.update { it.copy(myYears = p?.experienceYears, firstName = p?.fullName?.trim()?.substringBefore(' ')?.ifBlank { null },
                     profileComplete = p?.isComplete == true) }
@@ -106,6 +108,8 @@ class FeedViewModel @Inject constructor(
     }
 
     fun setCompany(companyId: String?) = setFilter { it.copy(companyId = companyId) }
+
+    fun setLocation(city: String?) = setFilter { it.copy(location = city) }
 
     fun toggleFitsMe() = setFilter {
         it.copy(fitsYears = if (it.fitsYears != null) null else _ui.value.myYears)

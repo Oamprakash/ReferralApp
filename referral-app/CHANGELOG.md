@@ -109,6 +109,8 @@ Play "What's new": `store/whatsnew/whatsnew-en-US`.
   "Work at an IT company? Post a job" for non-referrers (dismissable with Not now), since many skip the intro.
 
 **Small fixes**
+- Jobs: Location filter (cities with open jobs right now, from a dropdown chip and in the filter sheet);
+  typing a city in search also matches the job's location.
 - Overqualified counts as half a fit: more than a year above the range scores 25/50 for experience (was 0).
   Needs migration `20261123000000_overqualified_score.sql`.
 - Match colours in three tiers (MatchTier), no red: strong emerald-teal `#0F766E` (ring 65+, bar ≥70%), moderate amber
