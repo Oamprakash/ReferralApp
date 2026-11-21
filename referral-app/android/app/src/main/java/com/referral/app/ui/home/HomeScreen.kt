@@ -32,6 +32,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Search
 import com.referral.app.ui.common.AppCard
 import androidx.compose.material.icons.filled.Create
@@ -464,6 +465,24 @@ private fun FilterOptions(ui: FeedUiState, viewModel: FeedViewModel) {
             label = { Text(label) },
             colors = colors, border = chipBorder(on),
         )
+    }
+    Box {
+        var locationMenu by remember { mutableStateOf(false) }
+        val on = ui.filter.location != null
+        FilterChip(
+            selected = on,
+            onClick = { locationMenu = true },
+            label = { Text(ui.filter.location ?: "Location") },
+            leadingIcon = { Icon(Icons.Filled.LocationOn, contentDescription = null, modifier = Modifier.size(16.dp)) },
+            trailingIcon = { Icon(Icons.Filled.ArrowDropDown, contentDescription = null) },
+            colors = colors, border = chipBorder(on),
+        )
+        DropdownMenu(expanded = locationMenu, onDismissRequest = { locationMenu = false }) {
+            DropdownMenuItem(text = { Text("Any location") }, onClick = { locationMenu = false; viewModel.setLocation(null) })
+            ui.locations.forEach { city ->
+                DropdownMenuItem(text = { Text(city) }, onClick = { locationMenu = false; viewModel.setLocation(city) })
+            }
+        }
     }
     Box {
         val on = ui.filter.companyId != null

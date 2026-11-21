@@ -30,13 +30,14 @@ data class FeedFilter(
     val query: String = "",
     val workModes: Set<String> = emptySet(),     // "onsite", "hybrid", "remote"
     val companyId: String? = null,
+    val location: String? = null,                // city, matched anywhere in the job's location text
     val fitsYears: Int? = null,                  // set = only jobs whose range includes these years
     val savedIds: Set<String>? = null,           // set = only these jobs (the "Saved" filter)
 ) {
-    val isActive get() = query.isNotBlank() || workModes.isNotEmpty() || companyId != null || fitsYears != null ||
+    val isActive get() = query.isNotBlank() || workModes.isNotEmpty() || companyId != null || location != null || fitsYears != null ||
         savedIds != null
     /** Filters other than the search box, for the badge on the filter button. */
-    val filterCount get() = workModes.size + listOf(companyId, fitsYears, savedIds).count { it != null }
+    val filterCount get() = workModes.size + listOf(companyId, location, fitsYears, savedIds).count { it != null }
 }
 
 sealed class ApplyException(message: String) : Exception(message) {
@@ -79,6 +80,7 @@ class JobRepository @Inject constructor(
                     if (q.isNotEmpty()) {
                         or {
                             ilike("title", "%$q%")
+                            ilike("location", "%$q%")
                             if (companyIds.isNotEmpty()) isIn("company_id", companyIds)
                             ov("skills", skillForms)
                         }
@@ -86,6 +88,9 @@ class JobRepository @Inject constructor(
                     filter.savedIds?.let { isIn("id", it.toList()) }
                     if (filter.workModes.isNotEmpty()) isIn("work_mode", filter.workModes.toList())
                     filter.companyId?.let { eq("company_id", it) }
+                    filter.location?.let { city ->
+                        ilike("location", "%${city.filterNot { it in "%_*,(){}\"\\" }}%")
+                    }
                     filter.fitsYears?.let { years ->
                         lte("exp_min", years)
                         gte("exp_max", years)
@@ -113,6 +118,29 @@ class JobRepository @Inject constructor(
         ).data
         return json.decodeFromString(ListSerializer(JobPoster.serializer()), body).associateBy { it.jobId }
     }
+
+    /**
+     * Cities that have open jobs right now, for the Location filter. Locations are free text
+     * ("Chennai", "Chennai, OMR"), so this takes the part before the first comma and merges spellings.
+     */
+    suspend fun openLocations(): List<String> {
+        val cutoff = Instant.now().minus(FRESHNESS_DAYS, ChronoUnit.DAYS).toString()
+        val rows = supabase.from("jobs").select(Columns.list("location")) {
+            filter {
+                eq("status", "active")
+                gt("last_confirmed_at", cutoff)
+            }
+            limit(500)
+        }.decodeList<LocationRow>()
+        return rows.mapNotNull { r ->
+            r.location.substringBefore(',').substringBefore('/').trim()
+                .ifBlank { null }
+                ?.lowercase()?.split(' ')?.joinToString(" ") { w -> w.replaceFirstChar { it.uppercase() } }
+        }.distinct().sorted()
+    }
+
+    @kotlinx.serialization.Serializable
+    private data class LocationRow(val location: String = "")
 
     suspend fun companies(): List<CompanyOption> =
         supabase.from("companies").select(Columns.list("id", "name")) {
