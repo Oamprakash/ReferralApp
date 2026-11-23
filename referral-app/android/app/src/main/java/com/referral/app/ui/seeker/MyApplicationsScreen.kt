@@ -1,5 +1,10 @@
 package com.referral.app.ui.seeker
 
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import com.referral.app.ui.common.OfflineBanner
+import com.referral.app.ui.common.rememberIsOnline
+import com.referral.app.ui.common.skeletonItems
+import com.referral.app.ui.common.ErrorState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -57,6 +62,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
 import com.referral.app.links.ReviewPrompt
 
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)   // PullToRefreshBox
 @Composable
 fun MyApplicationsScreen(
     onOpenJob: (String) -> Unit,
@@ -64,6 +70,7 @@ fun MyApplicationsScreen(
     viewModel: MyApplicationsViewModel = hiltViewModel(),
 ) {
     val ui by viewModel.ui.collectAsStateWithLifecycle()
+    val online = rememberIsOnline()   // offline strip only when needed (an empty item would still add a gap)
     val context = LocalContext.current
     // A good moment to ask for a rating: one of their applications got referred (or further)
     val progressed = ui.applications.any { it.status in setOf("referred", "interview", "offer") }
@@ -80,15 +87,26 @@ fun MyApplicationsScreen(
         topBar = { AppTopBar("Applied", subtitle = "Track every referral request") },
         containerColor = MaterialTheme.colorScheme.background,
     ) { padding ->
-        if (ui.loading) {
-            LoadingBox(Modifier.padding(padding))
-            return@Scaffold
-        }
+      PullToRefreshBox(
+        isRefreshing = ui.refreshing,
+        onRefresh = viewModel::refresh,
+        modifier = Modifier.fillMaxSize().padding(padding),
+      ) {
         LazyColumn(
-            modifier = Modifier.fillMaxSize().padding(padding),
+            modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(start = Space.screen, end = Space.screen, top = Space.lg, bottom = Space.xl),
             verticalArrangement = Arrangement.spacedBy(Space.cardGap),
         ) {
+            if (!online && !(ui.error != null && ui.applications.isEmpty())) item { OfflineBanner() }   // the error state says it itself
+            if (ui.loading) {
+                skeletonItems(3, Modifier)
+                return@LazyColumn
+            }
+            // Couldn't load at all: full error with Try again. Later errors (e.g. withdraw) stay a banner.
+            if (ui.error != null && ui.applications.isEmpty()) {
+                item { ErrorState(ui.error!!, onRetry = viewModel::retry) }
+                return@LazyColumn
+            }
             item { WeeklyQuota(ui.usedThisWeek) }
             ui.error?.let { msg -> item { Banner(msg, Tone.ERROR) } }
             if (ui.applications.isEmpty()) {
@@ -119,6 +137,7 @@ fun MyApplicationsScreen(
                 )
             }
         }
+      }
     }
 }
 

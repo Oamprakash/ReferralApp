@@ -1,5 +1,6 @@
 package com.referral.app.ui.seeker
 
+import com.referral.app.analytics.NonFatal
 import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -82,6 +83,12 @@ class JobDetailViewModel @Inject constructor(
 
     fun toggleSaved() { savedJobs.toggle(jobId) }
 
+    /** "Try again" after a failed load. */
+    fun retry() {
+        _ui.update { it.copy(loading = true, error = null) }
+        load()
+    }
+
     /** Called on every resume so the screen reflects an application made on the apply screen. */
     fun load() {
         viewModelScope.launch {
@@ -89,7 +96,8 @@ class JobDetailViewModel @Inject constructor(
                 .onSuccess { d -> _ui.update { it.copy(loading = false, job = d, notFound = d == null, error = null) } }
                 .onFailure { e ->
                     Log.e("JobDetail", "Load failed", e)
-                    _ui.update { it.copy(loading = false, error = "Couldn't load this job.") }
+                    NonFatal.record(e)
+                    _ui.update { it.copy(loading = false, error = "Couldn't load this job") }
                 }
         }
     }

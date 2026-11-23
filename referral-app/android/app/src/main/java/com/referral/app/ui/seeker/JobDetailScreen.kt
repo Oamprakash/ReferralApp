@@ -1,5 +1,7 @@
 package com.referral.app.ui.seeker
 
+import com.referral.app.ui.common.SkeletonCard
+import com.referral.app.ui.common.ErrorState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -128,11 +130,18 @@ fun JobDetailScreen(
         },
     ) { padding ->
         when {
-            ui.loading -> LoadingBox(Modifier.padding(padding))
+            ui.loading -> Column(
+                Modifier.padding(padding).padding(horizontal = Space.screen, vertical = Space.lg),
+                verticalArrangement = Arrangement.spacedBy(Space.cardGap),
+            ) { repeat(3) { SkeletonCard() } }
+            // Couldn't reach the server (not "job doesn't exist"): offer Try again and Back
+            job == null && ui.error != null && !ui.notFound -> ErrorState(
+                ui.error!!, onRetry = viewModel::retry, onBack = onBack, modifier = Modifier.padding(padding),
+            )
             job == null -> EmptyState(
                 icon = Icons.Filled.Search,
                 title = "This job isn't available",
-                body = ui.error ?: "It may have been closed or filled.",
+                body = "It may have been closed or filled.",
                 modifier = Modifier.padding(padding),
             )
             else -> DetailBody(job, ui, Modifier.padding(padding), onReport = { reportOpen = true })

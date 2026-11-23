@@ -1,5 +1,7 @@
 package com.referral.app.ui.matches
 
+import com.referral.app.ui.common.skeletonItems
+import com.referral.app.ui.common.ErrorState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -46,10 +48,15 @@ fun LazyListScope.bestMatchItems(
     ui: MatchesUiState,
     onOpenJob: (String) -> Unit,
     onEditProfile: () -> Unit,
+    onRetry: () -> Unit,
 ) {
     val pad = Modifier.padding(horizontal = Space.screen)
     if (ui.loading) {
-        item { LoadingBox(Modifier.padding(top = 60.dp)) }
+        skeletonItems(4)
+        return
+    }
+    if (ui.error != null && ui.matches.isEmpty()) {
+        item { ErrorState(ui.error, onRetry = onRetry) }
         return
     }
     ui.error?.let { m -> item { Banner(m, Tone.ERROR, pad) } }

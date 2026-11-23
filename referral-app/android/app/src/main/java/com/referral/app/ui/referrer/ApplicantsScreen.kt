@@ -1,5 +1,9 @@
 package com.referral.app.ui.referrer
 
+import com.referral.app.ui.common.OfflineBanner
+import com.referral.app.ui.common.rememberIsOnline
+import com.referral.app.ui.common.skeletonItems
+import com.referral.app.ui.common.ErrorState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -67,6 +71,7 @@ fun ApplicantsScreen(
     viewModel: ApplicantsViewModel = hiltViewModel(),
 ) {
     val ui by viewModel.ui.collectAsStateWithLifecycle()
+    val online = rememberIsOnline()   // offline strip only when needed (an empty item would still add a gap)
     val uriHandler = LocalUriHandler.current
     val context = LocalContext.current
     // A good moment to ask for a rating: this referrer has referred someone
@@ -97,15 +102,21 @@ fun ApplicantsScreen(
                     )
                 }
             }
-            if (ui.loading) {
-                LoadingBox()
-                return@Column
-            }
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(start = Space.screen, end = Space.screen, top = Space.lg, bottom = Space.xl),
                 verticalArrangement = Arrangement.spacedBy(Space.cardGap),
             ) {
+                if (!online && !(ui.error != null && ui.applicants.isEmpty())) item { OfflineBanner() }   // the error state says it itself
+                if (ui.loading) {
+                    skeletonItems(3, Modifier)
+                    return@LazyColumn
+                }
+                // Couldn't load at all: full error with Try again. Later errors (status updates) stay a banner.
+                if (ui.error != null && ui.applicants.isEmpty()) {
+                    item { ErrorState(ui.error!!, onRetry = viewModel::retry) }
+                    return@LazyColumn
+                }
                 ui.error?.let { msg -> item { Banner(msg, Tone.ERROR) } }
                 ui.message?.let { msg -> item { Banner(msg, Tone.SUCCESS) } }
                 if (ui.tab == ApplicantTab.IN_PROGRESS && ui.visible.isNotEmpty()) {

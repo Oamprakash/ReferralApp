@@ -3,6 +3,8 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- To say "You're offline" instead of a generic error -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <!-- Firebase Analytics adds this by default. The app doesn't use the advertising ID (see the Play
          "Advertising ID" declaration), so it's removed here and collection is switched off below. -->

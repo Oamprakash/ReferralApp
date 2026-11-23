@@ -1,5 +1,6 @@
 package com.referral.app.ui.matches
 
+import com.referral.app.analytics.NonFatal
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -35,6 +36,12 @@ class MatchesViewModel @Inject constructor(
     val ui: StateFlow<MatchesUiState> = _ui.asStateFlow()
 
     /** Called on every resume: the profile may have changed, or the user applied to one. */
+    /** "Try again" after a failed load: show the skeleton again. */
+    fun retry() {
+        _ui.update { it.copy(loading = true, error = null) }
+        load()
+    }
+
     fun load() {
         viewModelScope.launch {
             _ui.update { it.copy(refreshing = !it.loading, error = null) }
@@ -45,7 +52,8 @@ class MatchesViewModel @Inject constructor(
                 _ui.update { it.copy(loading = false, refreshing = false, matches = list, profileThin = thin, myYears = years) }
             }.onFailure { e ->
                 Log.e("Matches", "Load failed", e)
-                _ui.update { it.copy(loading = false, refreshing = false, error = "Couldn't load matches. Pull to retry.") }
+                NonFatal.record(e)
+                _ui.update { it.copy(loading = false, refreshing = false, error = "Couldn't load your matches") }
             }
         }
     }

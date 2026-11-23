@@ -1,5 +1,6 @@
 package com.referral.app.ui.referrer
 
+import com.referral.app.analytics.NonFatal
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -25,6 +26,7 @@ data class MyPostsUiState(
     val stats: ReferrerStats? = null,
     val busyId: String? = null,
     val error: String? = null,
+    val refreshing: Boolean = false,
     /** For share text; null if verification lapsed (the text then leaves the company out). */
     val companyName: String? = null,
 ) {
@@ -41,13 +43,26 @@ class MyPostsViewModel @Inject constructor(
 
     // Loaded by the screen on every resume (first open included)
 
+    /** Pull to refresh. */
+    fun refresh() {
+        _ui.update { it.copy(refreshing = true) }
+        load()
+    }
+
+    /** "Try again" after a failed load. */
+    fun retry() {
+        _ui.update { it.copy(loading = true, error = null) }
+        load()
+    }
+
     fun load() {
         viewModelScope.launch {
             runCatching { repo.myPosts() }
-                .onSuccess { list -> _ui.update { it.copy(loading = false, posts = list, error = null) } }
+                .onSuccess { list -> _ui.update { it.copy(loading = false, refreshing = false, posts = list, error = null) } }
                 .onFailure { e ->
                     Log.e("MyPosts", "Load failed", e)
-                    _ui.update { it.copy(loading = false, error = "Couldn't load your posts.") }
+                    NonFatal.record(e)
+                    _ui.update { it.copy(loading = false, refreshing = false, error = "Couldn't load your posts") }
                 }
             // Counts are a nice-to-have: the list still shows if they fail
             runCatching { repo.postsSummary() }.onSuccess { m -> _ui.update { it.copy(summaries = m) } }

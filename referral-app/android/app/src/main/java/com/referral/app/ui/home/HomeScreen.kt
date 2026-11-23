@@ -1,5 +1,9 @@
 package com.referral.app.ui.home
 
+import com.referral.app.ui.common.OfflineBanner
+import com.referral.app.ui.common.rememberIsOnline
+import com.referral.app.ui.common.skeletonItems
+import com.referral.app.ui.common.ErrorState
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
@@ -108,6 +112,7 @@ fun HomeScreen(
     matchesViewModel: MatchesViewModel = hiltViewModel(),
 ) {
     val ui by viewModel.ui.collectAsStateWithLifecycle()
+    val online = rememberIsOnline()   // offline strip only when needed (an empty item would still add a gap)
     val matches by matchesViewModel.ui.collectAsStateWithLifecycle()
     var bestMatches by rememberSaveable { mutableStateOf(false) }
     var showFilters by rememberSaveable { mutableStateOf(false) }
@@ -152,6 +157,7 @@ fun HomeScreen(
                     onOpenFilters = { bestMatches = false; showFilters = true },
                 )
             }
+            if (!online && ui.error == null && matches.error == null) item { OfflineBanner(Modifier.padding(horizontal = Space.screen)) }   // errors say it themselves
             item {
                 Box(Modifier.padding(top = Space.xs)) { ModeSwitch(bestMatches) { bestMatches = it } }   // 16 below the header
             }
@@ -182,16 +188,15 @@ fun HomeScreen(
             }
 
             if (bestMatches) {
-                bestMatchItems(matches, onOpenJob = { onOpenJob(it, "ForYou") }, onEditProfile = onEditProfile)
+                bestMatchItems(matches, onOpenJob = { onOpenJob(it, "ForYou") }, onEditProfile = onEditProfile,
+                    onRetry = matchesViewModel::retry)
                 return@LazyColumn
             }
 
             item { Box(Modifier.padding(top = Space.xs)) { Filters(ui, viewModel) } }   // 16 below the switch
             when {
-                ui.loading -> item { LoadingBox(Modifier.padding(top = 60.dp)) }
-                ui.error != null -> item {
-                    Banner(ui.error!!, Tone.ERROR, Modifier.padding(horizontal = Space.screen))
-                }
+                ui.loading -> skeletonItems(4)
+                ui.error != null -> item { ErrorState(ui.error!!, onRetry = viewModel::retry) }
                 ui.jobs.isEmpty() -> item {
                     val savedOnly = ui.filter.savedIds != null
                     EmptyState(
