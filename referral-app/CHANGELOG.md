@@ -108,6 +108,14 @@ Play "What's new": `store/whatsnew/whatsnew-en-US`.
 - Jobs tab cards: "Upload your resume to ask for referrals" until the profile is complete, and
   "Work at an IT company? Post a job" for non-referrers (dismissable with Not now), since many skip the intro.
 
+**Loading, error and offline states**
+- Skeleton cards instead of a spinner while Jobs, Best matches, Applied, My posts, Applicants and Job details load.
+- If a screen can't load: a full error with **Try again** (and Back on Job details); "You're offline" when there's
+  no connection. Errors during actions (withdraw, close, status) stay a banner.
+- Pull to refresh on Applied and My posts too. Offline strip above lists that are showing older data.
+- No more technical error text on Jobs; caught errors go to Crashlytics as non-fatals (network failures skipped).
+- New permission: ACCESS_NETWORK_STATE (normal, no prompt) to tell offline from other errors.
+
 **Small fixes**
 - Jobs: Location filter (cities with open jobs right now, from a dropdown chip and in the filter sheet);
   typing a city in search also matches the job's location.

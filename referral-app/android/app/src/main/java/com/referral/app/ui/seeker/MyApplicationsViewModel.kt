@@ -1,5 +1,6 @@
 package com.referral.app.ui.seeker
 
+import com.referral.app.analytics.NonFatal
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -22,6 +23,7 @@ data class MyApplicationsUiState(
     val referrers: Map<String, String> = emptyMap(),
     val busyId: String? = null,
     val error: String? = null,
+    val refreshing: Boolean = false,
 ) {
     val usedThisWeek: Int
         get() = applications.count {
@@ -38,12 +40,24 @@ class MyApplicationsViewModel @Inject constructor(
     private val _ui = MutableStateFlow(MyApplicationsUiState())
     val ui: StateFlow<MyApplicationsUiState> = _ui.asStateFlow()
 
+    /** Pull to refresh. */
+    fun refresh() {
+        _ui.update { it.copy(refreshing = true) }
+        load()
+    }
+
+    /** "Try again" after a failed load. */
+    fun retry() {
+        _ui.update { it.copy(loading = true, error = null) }
+        load()
+    }
+
     /** Called on every resume (first open included). */
     fun load() {
         viewModelScope.launch {
             runCatching { jobs.myApplications() }
                 .onSuccess { list ->
-                    _ui.update { it.copy(loading = false, applications = list, error = null) }
+                    _ui.update { it.copy(loading = false, refreshing = false, applications = list, error = null) }
                     runCatching { jobs.posters(list.map { it.jobId }.distinct()) }
                         .onSuccess { p ->
                             val names = p.mapNotNull { (id, poster) -> poster.firstName?.ifBlank { null }?.let { id to it } }.toMap()
@@ -53,7 +67,8 @@ class MyApplicationsViewModel @Inject constructor(
                 }
                 .onFailure { e ->
                     Log.e("MyApplications", "Load failed", e)
-                    _ui.update { it.copy(loading = false, error = "Couldn't load your applications.") }
+                    NonFatal.record(e)
+                    _ui.update { it.copy(loading = false, refreshing = false, error = "Couldn't load your applications") }
                 }
         }
     }

@@ -1,5 +1,6 @@
 package com.referral.app.ui.home
 
+import com.referral.app.analytics.NonFatal
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -83,6 +84,9 @@ class FeedViewModel @Inject constructor(
 
     fun refresh() = load(initial = false)
 
+    /** "Try again" after a failed load: show the skeleton again. */
+    fun retry() = load(initial = true)
+
     /** Refresh quietly when returning to the feed (after applying or posting); skips the first resume. */
     fun onResume() {
         if (resumedOnce) {
@@ -148,10 +152,8 @@ class FeedViewModel @Inject constructor(
             }.onFailure { e ->
                 if (e is kotlinx.coroutines.CancellationException) throw e
                 Log.e(TAG, "Feed load failed", e)   // full cause in Logcat, filter by "Feed"
-                _ui.update {
-                    it.copy(loading = false, refreshing = false,
-                        error = "Couldn't load jobs. Pull down to retry.\n${e.message.orEmpty().take(200)}")
-                }
+                NonFatal.record(e)                   // and in Crashlytics; users get a plain message
+                _ui.update { it.copy(loading = false, refreshing = false, error = "Couldn't load jobs") }
             }
         }
     }

@@ -1,5 +1,6 @@
 package com.referral.app.ui.referrer
 
+import com.referral.app.analytics.NonFatal
 import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -77,13 +78,20 @@ class ApplicantsViewModel @Inject constructor(
         load()
     }
 
+    /** "Try again" after a failed load. */
+    fun retry() {
+        _ui.update { it.copy(loading = true, error = null) }
+        load()
+    }
+
     fun load() {
         viewModelScope.launch {
             runCatching { repo.applicants(jobId) }
                 .onSuccess { list -> _ui.update { it.copy(loading = false, applicants = list, error = null) } }
                 .onFailure { e ->
                     Log.e(TAG, "Load failed", e)
-                    _ui.update { it.copy(loading = false, error = "Couldn't load applicants.") }
+                    NonFatal.record(e)
+                    _ui.update { it.copy(loading = false, error = "Couldn't load applicants") }
                 }
         }
     }
