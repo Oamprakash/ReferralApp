@@ -32,6 +32,20 @@ data class DomainRequest(
     @SerialName("last_requested_at") val lastRequestedAt: String,
 )
 
+/** A verified employee an admin can post a job for. */
+@Serializable
+data class AdminReferrer(
+    @SerialName("user_id") val userId: String,
+    @SerialName("full_name") val fullName: String? = null,
+    @SerialName("company_id") val companyId: String,
+    @SerialName("company_name") val companyName: String,
+    @SerialName("work_email") val workEmail: String,
+    @SerialName("expires_at") val expiresAt: String,
+    @SerialName("active_posts") val activePosts: Int = 0,
+) {
+    val name: String get() = fullName?.ifBlank { null } ?: workEmail.substringBefore('@')
+}
+
 /** Admin-only calls. The database refuses every one of them for non-admins (NOT_ADMIN). */
 @Singleton
 class AdminRepository @Inject constructor(
@@ -60,6 +74,10 @@ class AdminRepository @Inject constructor(
             put("p_company_name", companyName.trim())
         })
     }
+
+    /** Verified employees (unexpired), for "Post for a referrer". */
+    suspend fun referrers(): List<AdminReferrer> =
+        json.decodeFromString(ListSerializer(AdminReferrer.serializer()), supabase.postgrest.rpc("admin_referrers").data)
 
     suspend fun rejectDomain(domain: String) {
         supabase.postgrest.rpc("admin_reject_domain", buildJsonObject { put("p_domain", domain) })

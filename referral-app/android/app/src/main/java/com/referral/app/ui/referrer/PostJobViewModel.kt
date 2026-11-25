@@ -1,6 +1,11 @@
 package com.referral.app.ui.referrer
 
 import android.util.Log
+import androidx.lifecycle.SavedStateHandle
+import androidx.navigation.toRoute
+import com.referral.app.data.AdminRepository
+import com.referral.app.data.model.CompanyName
+import com.referral.app.ui.navigation.PostJobRoute
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.referral.app.data.ActivePostLimitException
@@ -92,13 +97,20 @@ data class PostJobUiState(
     val posting: Boolean = false,
     val posted: Boolean = false,
     val error: String? = null,
+    /** Set when an admin posts for someone else: their name, shown on the form. */
+    val onBehalfOf: String? = null,
 )
 
 @HiltViewModel
 class PostJobViewModel @Inject constructor(
     private val repo: ReferrerRepository,
     private val auth: AuthRepository,
+    private val admin: AdminRepository,
+    savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
+
+    /** An admin posting on behalf of this verified employee, or null for your own post. */
+    private val forReferrerId: String? = runCatching { savedStateHandle.toRoute<PostJobRoute>().forReferrerId }.getOrNull()
 
     private val _ui = MutableStateFlow(PostJobUiState())
     val ui: StateFlow<PostJobUiState> = _ui.asStateFlow()
@@ -109,6 +121,24 @@ class PostJobViewModel @Inject constructor(
     fun reload() {
         viewModelScope.launch {
             _ui.update { it.copy(loading = true, error = null) }
+            if (forReferrerId != null) {
+                runCatching { admin.referrers().firstOrNull { it.userId == forReferrerId } }
+                    .onSuccess { r ->
+                        _ui.update {
+                            it.copy(
+                                loading = false,
+                                verification = r?.let { x -> MyVerification(x.companyId, x.workEmail, x.expiresAt, CompanyName(x.companyName)) },
+                                onBehalfOf = r?.name,
+                                error = if (r == null) "This person's verification has expired." else null,
+                            )
+                        }
+                    }
+                    .onFailure { e ->
+                        Log.e("PostJob", "Referrer lookup failed", e)
+                        _ui.update { it.copy(loading = false, error = "Couldn't load this referrer.") }
+                    }
+                return@launch
+            }
             runCatching { repo.myVerification() }
                 .onSuccess { v -> _ui.update { it.copy(loading = false, verification = v) } }
                 .onFailure { e ->
@@ -127,7 +157,8 @@ class PostJobViewModel @Inject constructor(
             _ui.update { it.copy(showErrors = true) }
             return
         }
-        val uid = auth.currentUserId ?: return
+        // The post belongs to the employee when an admin posts for them
+        val uid = forReferrerId ?: auth.currentUserId ?: return
         viewModelScope.launch {
             _ui.update { it.copy(posting = true, error = null) }
             runCatching { repo.postJob(s.form.toNewJob(v.companyId, uid)) }
@@ -136,8 +167,9 @@ class PostJobViewModel @Inject constructor(
                     Log.e("PostJob", "Post failed", e)
                     _ui.update {
                         it.copy(posting = false, error = when (e) {
-                            is ActivePostLimitException ->
-                                "You already have 5 active posts. Close one in My posts first."
+                            is ActivePostLimitException -> if (forReferrerId != null)
+                                "${s.onBehalfOf ?: "They"} already ${if (s.onBehalfOf != null) "has" else "have"} 5 active posts."
+                            else "You already have 5 active posts. Close one in My posts first."
                             else -> "Couldn't post the job. Try again."
                         })
                     }

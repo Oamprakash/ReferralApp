@@ -56,20 +56,29 @@ import com.referral.app.ui.common.ConfirmRequest
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AdminScreen(onBack: () -> Unit, viewModel: AdminViewModel = hiltViewModel()) {
+fun AdminScreen(
+    onBack: () -> Unit,
+    /** Opens Post a job for that verified employee (the post will be theirs). */
+    onPostFor: (userId: String) -> Unit = {},
+    viewModel: AdminViewModel = hiltViewModel(),
+) {
     val ui by viewModel.ui.collectAsStateWithLifecycle()
     var confirm by remember { mutableStateOf<ConfirmRequest?>(null) }
     var approving by remember { mutableStateOf<DomainRequest?>(null) }
     ConfirmDialog(confirm, onDismiss = { confirm = null })
 
     Scaffold(
-        topBar = { AppTopBar("Admin", onBack = onBack, subtitle = "Reports and company requests") },
+        topBar = { AppTopBar("Admin", onBack = onBack, subtitle = "Reports, company requests, referrers") },
         containerColor = MaterialTheme.colorScheme.background,
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding)) {
             PrimaryTabRow(selectedTabIndex = ui.tab.ordinal, containerColor = MaterialTheme.colorScheme.background) {
                 AdminTab.entries.forEach { t ->
-                    val n = if (t == AdminTab.REPORTS) ui.reports.size else ui.domains.size
+                    val n = when (t) {
+                        AdminTab.REPORTS -> ui.reports.size
+                        AdminTab.COMPANIES -> ui.domains.size
+                        AdminTab.REFERRERS -> ui.referrers.size
+                    }
                     Tab(selected = ui.tab == t, onClick = { viewModel.selectTab(t) }, text = { Text("${t.label} ($n)") })
                 }
             }
@@ -109,6 +118,21 @@ fun AdminScreen(onBack: () -> Unit, viewModel: AdminViewModel = hiltViewModel())
                                         "Suspend", destructive = true, onConfirm = { viewModel.resolve(g, "uphold") })
                                 },
                             )
+                        }
+                    } else if (ui.tab == AdminTab.REFERRERS) {
+                        item {
+                            Banner(
+                                "Post an opening for a verified employee who sent you the details. " +
+                                    "It goes up as theirs: they get the applicants and a notification.",
+                                Tone.INFO,
+                            )
+                        }
+                        if (ui.referrers.isEmpty()) item {
+                            EmptyState(Icons.Filled.CheckCircle, "No verified employees yet",
+                                "Once someone verifies their work email, they show up here.")
+                        }
+                        items(ui.referrers, key = { it.userId + it.companyId }) { r ->
+                            ReferrerCard(r, onPost = { onPostFor(r.userId) })
                         }
                     } else {
                         if (ui.domains.isEmpty()) item { EmptyState(Icons.Filled.CheckCircle, "No company requests", "New email domains people try to verify with show up here.") }
@@ -153,6 +177,22 @@ private fun ReportCard(g: ReportGroup, busy: Boolean, onDismiss: () -> Unit, onU
                 SmallButton("Dismiss", onDismiss, enabled = !busy)
                 SmallButton(if (g.targetType == "job") "Close post" else "Suspend user", onUphold, enabled = !busy, filled = true, destructive = true)
             }
+        }
+    }
+}
+
+@Composable
+private fun ReferrerCard(r: com.referral.app.data.AdminReferrer, onPost: () -> Unit) {
+    AppCard {
+        Column(verticalArrangement = Arrangement.spacedBy(Space.xs)) {
+            Text(r.name, style = MaterialTheme.typography.titleMedium)
+            Text("${r.companyName} · ${r.workEmail}", style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Text("${r.activePosts} of 5 active posts", style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f))
+            SmallButton("Post for them", onPost, enabled = r.activePosts < 5, filled = true)
         }
     }
 }

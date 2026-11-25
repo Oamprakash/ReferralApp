@@ -14,13 +14,14 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-enum class AdminTab(val label: String) { REPORTS("Reports"), COMPANIES("Company requests") }
+enum class AdminTab(val label: String) { REPORTS("Reports"), COMPANIES("Company requests"), REFERRERS("Referrers") }
 
 data class AdminUiState(
     val loading: Boolean = true,
     val tab: AdminTab = AdminTab.REPORTS,
     val reports: List<ReportGroup> = emptyList(),
     val domains: List<DomainRequest> = emptyList(),
+    val referrers: List<com.referral.app.data.AdminReferrer> = emptyList(),
     val busyKey: String? = null,
     val message: String? = null,
     val error: String? = null,
@@ -38,8 +39,8 @@ class AdminViewModel @Inject constructor(
 
     fun load() {
         viewModelScope.launch {
-            runCatching { repo.openReports() to repo.domainRequests() }
-                .onSuccess { (r, d) -> _ui.update { it.copy(loading = false, reports = r, domains = d, error = null) } }
+            runCatching { Triple(repo.openReports(), repo.domainRequests(), runCatching { repo.referrers() }.getOrDefault(emptyList())) }
+                .onSuccess { (r, d, refs) -> _ui.update { it.copy(loading = false, reports = r, domains = d, referrers = refs, error = null) } }
                 .onFailure { e ->
                     Log.e(TAG, "Load failed", e)
                     _ui.update {
