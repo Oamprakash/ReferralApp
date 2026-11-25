@@ -66,7 +66,7 @@ fun PostJobScreen(
     }
 
     Scaffold(
-        topBar = { AppTopBar("Post a job", onBack = onBack) },
+        topBar = { AppTopBar(if (ui.onBehalfOf != null) "Post for a referrer" else "Post a job", onBack = onBack) },
         containerColor = MaterialTheme.colorScheme.background,
     ) { padding ->
         when {
@@ -106,8 +106,18 @@ private fun Form(
             .padding(horizontal = Space.screen, vertical = Space.sm),
         verticalArrangement = Arrangement.spacedBy(Space.lg),
     ) {
+        ui.onBehalfOf?.let { name ->
+            // Admin posting for a verified employee: make it unmistakable whose post this is
+            Banner(
+                "Posting for $name at ${v.companyName}. The post is theirs: it shows under their name, " +
+                    "they get the applicants and a notification, and only they can refer.",
+                Tone.INFO,
+            )
+        }
         AppCard {
-            Row(horizontalArrangement = Arrangement.spacedBy(Space.sm)) { VerifiedBadge("Posting as ${v.companyName}") }
+            Row(horizontalArrangement = Arrangement.spacedBy(Space.sm)) {
+                VerifiedBadge(ui.onBehalfOf?.let { "$it · ${v.companyName}" } ?: "Posting as ${v.companyName}")
+            }
             Text("Verification valid for ${v.daysLeft} more days", style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
@@ -204,7 +214,8 @@ private fun Form(
                 if (f.problem != null) onPost()
                 else confirm = ConfirmRequest(
                     "Post \"${f.title.trim()}\"?",
-                    "It goes live in the feed right away as posted by a verified ${v.companyName} employee. " +
+                    (ui.onBehalfOf?.let { "It goes live right away as $it's post. Check the details with them first. " }
+                        ?: "It goes live in the feed right away as posted by a verified ${v.companyName} employee. ") +
                         "Make sure it's a real, publicly listed opening.",
                     "Post job", onConfirm = onPost)
             },

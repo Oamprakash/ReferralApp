@@ -59,7 +59,8 @@ import com.referral.app.links.PendingJobLink
 @Serializable data class ProfileRoute(val returnAfterSave: Boolean = false)
 @Serializable data object HomeRoute
 @Serializable data object VerifyRoute
-@Serializable data object PostJobRoute
+/** [forReferrerId]: an admin posting on behalf of that verified employee (the post is theirs). */
+@Serializable data class PostJobRoute(val forReferrerId: String? = null)
 @Serializable data object MyPostsRoute
 @Serializable data object MyApplicationsRoute
 @Serializable data class JobDetailRoute(val jobId: String)
@@ -188,7 +189,7 @@ private fun SignedInGraph(
                     },
                     onAdmin = { nav.navigate(AdminRoute) },
                     onHowItWorks = { nav.navigate(HowItWorksRoute) },
-                    onPostJob = if (showPosts) null else ({ nav.navigate(PostJobRoute) }),
+                    onPostJob = if (showPosts) null else ({ nav.navigate(PostJobRoute()) }),
                     onSignOut = onSignOut,
                 )
             }
@@ -198,7 +199,7 @@ private fun SignedInGraph(
                     onEditProfile = { nav.navigate(ProfileRoute(returnAfterSave = true)) },
                     onProfile = { nav.switchTab(Tab.PROFILE) },
                     showPostPrompt = !showPosts,
-                    onPostJob = { nav.navigate(PostJobRoute) },
+                    onPostJob = { nav.navigate(PostJobRoute()) },
                 )
             }
             composable<MyApplicationsRoute> {
@@ -209,7 +210,7 @@ private fun SignedInGraph(
             }
             composable<MyPostsRoute> {
                 MyPostsScreen(
-                    onPostJob = { nav.navigate(PostJobRoute) },
+                    onPostJob = { nav.navigate(PostJobRoute()) },
                     onApplicants = { id -> nav.navigate(ApplicantsRoute(id)) },
                     onVerify = { nav.navigate(VerifyRoute) },
                 )
@@ -227,14 +228,16 @@ private fun SignedInGraph(
                     onDone = { nav.popBackStack() },                       // back to the job, which reloads
                 )
             }
-            composable<PostJobRoute> {
+            composable<PostJobRoute> { entry ->
+                val forReferrer = entry.toRoute<PostJobRoute>().forReferrerId
                 PostJobScreen(
                     onBack = { nav.popBackStack() },
                     onNeedsVerification = { nav.navigate(VerifyRoute) },
                     onPosted = {
+                        if (forReferrer != null) { nav.popBackStack(); return@PostJobScreen }   // back to Admin
                         val cameFromMyPosts = nav.previousBackStackEntry?.destination?.hasRoute<MyPostsRoute>() == true
                         if (cameFromMyPosts) nav.popBackStack()
-                        else nav.navigate(MyPostsRoute) { popUpTo(PostJobRoute) { inclusive = true } }
+                        else nav.navigate(MyPostsRoute) { popUpTo<PostJobRoute> { inclusive = true } }
                     },
                 )
             }
@@ -254,7 +257,7 @@ private fun SignedInGraph(
                 OnboardingScreen(onDone = { nav.popBackStack() }, replay = true)
             }
             composable<AdminRoute> {
-                AdminScreen(onBack = { nav.popBackStack() })
+                AdminScreen(onBack = { nav.popBackStack() }, onPostFor = { id -> nav.navigate(PostJobRoute(forReferrerId = id)) })
             }
         }
     }
