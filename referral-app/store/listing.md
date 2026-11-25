@@ -3,13 +3,15 @@
 **App name** (max 30): WarmIntro – Job Referrals
 
 **Short description** (max 80):
-Get referred to IT jobs by verified employees who actually work there.
+Get referred to IT jobs in India by employees who actually work there.
 
 **Full description** (max 4000):
 
 Referrals get you interviews. Cold applications mostly don't. But asking strangers for a referral is awkward, and most "hiring" posts online come from recruiters, not people who work at the company.
 
 This app works differently: every opening is posted by a verified employee of that company.
+
+WarmIntro is for IT jobs in India, starting with Chennai and growing city by city. It's also useful if you're abroad and planning to move back.
 
 FOR JOB SEEKERS
 • Real openings only. Posters verify their work email, and every post links to the official careers page or job ID.
@@ -30,10 +32,10 @@ PRIVACY
 • Your contact details are shared only after a referrer shortlists you.
 • Download a copy of your data or delete your account anytime from your profile.
 
-Starting with IT companies in Chennai, and growing city by city.
 
 **Category:** Business (or Productivity)
 **Tags to pick in Play Console:** Job search, Careers
+**Countries:** all countries (the listing says India up front, so people abroad know what to expect)
 **Contact email:** required: use a support address, not your work one.
 **Privacy policy URL:** `https://oamprakash.github.io/ReferralApp/privacy.html` once GitHub Pages is on (RELEASE.md, step 6).
 
@@ -46,3 +48,5 @@ The screenshots currently show drawn mock screens. Before publishing, take real 
 (seed data is fine), save them as store/screens/1.png … 5.png in this order (Home, For you, Job detail,
 Applied, My posts) and run `node store/gen/make_store_assets.js`. Play requires screenshots that show the
 actual app.
+
+Screenshot 1 caption should mention India, e.g. "Referrals for IT jobs in India".
