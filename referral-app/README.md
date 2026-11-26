@@ -315,3 +315,4 @@ Also run `migrations/20261122000000_job_posters_applied.sql`: the same function 
 applied to, so the Applied tab can show "Sent to Arjun".
 And `migrations/20261123000000_overqualified_score.sql`: experience above the job's range scores 25/50 instead of 0.
 And `migrations/20261124000000_admin_post_for.sql`: lets admins post a job on behalf of a verified employee (Admin → Referrers).
+And `migrations/20261125000000_new_match_alerts.sql`: push to people who score 60+ when a job goes live (max 3/day each).

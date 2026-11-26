@@ -41,8 +41,11 @@ class PushService : FirebaseMessagingService() {
         ) return
 
         val open = PendingIntent.getActivity(
-            this, 0,
-            Intent(this, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP),
+            this, message.data["notification_id"].hashCode(),
+            Intent(this, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP).apply {
+                // Same extras Android adds when it shows the push itself, so a tap opens the job
+                message.data.forEach { (k, v) -> putExtra(k, v) }
+            },
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
         )
         val notification = NotificationCompat.Builder(this, PushRegistrar.CHANNEL_ID)

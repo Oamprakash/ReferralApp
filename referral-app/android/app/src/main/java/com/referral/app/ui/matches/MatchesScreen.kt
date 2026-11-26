@@ -75,7 +75,7 @@ fun LazyListScope.bestMatchItems(
             EmptyState(
                 icon = Icons.Filled.Star,
                 title = "No matches yet",
-                body = "Nothing open fits your profile right now. New posts come in every day.",
+                body = "Nothing open fits your profile right now. When a strong match is posted, we'll send you a notification.",
                 action = { SmallButton("Update profile", onEditProfile, filled = true) },
             )
         }
