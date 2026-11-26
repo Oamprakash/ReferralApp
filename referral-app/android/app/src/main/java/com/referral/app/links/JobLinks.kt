@@ -20,6 +20,8 @@ object JobLinks {
 
     fun url(jobId: String): String = "$BASE?id=$jobId"
 
+    fun isJobId(s: String): Boolean = UUID.matches(s)
+
     /** The job id from an incoming link, or null if it isn't one of ours. */
     fun jobIdFrom(uri: Uri?): String? {
         if (uri == null || uri.host != "oamprakash.github.io") return null

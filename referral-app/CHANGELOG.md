@@ -116,6 +116,13 @@ Play "What's new": `store/whatsnew/whatsnew-en-US`.
 - No more technical error text on Jobs; caught errors go to Crashlytics as non-fatals (network failures skipped).
 - New permission: ACCESS_NETWORK_STATE (normal, no prompt) to tell offline from other errors.
 
+**New-match alerts**
+- When a job goes live, people it scores 60+ for get a push: "New match: Backend Engineer at Zoho · 78% match.
+  Ask Arjun for a referral." At most 3 a day per person; not for the poster, suspended users or people who applied.
+  Also sent when a post that was hidden for over 14 days comes back. Migration `20261125000000_new_match_alerts.sql`.
+- Tapping a new-match push opens that job (foreground and background).
+- Empty Jobs feed: "No openings yet… we'll send you a notification", with Upload resume if the profile isn't done.
+
 **Admin: post for a referrer**
 - Admin → Referrers lists verified employees; "Post for them" opens Post a job on their behalf.
   The post is theirs (referrer_id), so they get applicants, the My posts card and a "Your opening is live" notification.

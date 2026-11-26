@@ -204,15 +204,22 @@ fun HomeScreen(
                         title = when {
                             savedOnly && ui.filter.filterCount == 1 && ui.filter.query.isBlank() -> "No saved jobs"
                             ui.filter.isActive -> "No roles match these filters"
-                            else -> "No open roles right now"
+                            else -> "No openings yet"
                         },
                         body = when {
                             savedOnly && ui.filter.filterCount == 1 && ui.filter.query.isBlank() ->
                                 "Tap the bookmark on a job to keep it here. Closed or expired jobs drop off."
                             ui.filter.isActive -> "Try fewer filters."
-                            else -> "New posts come in every day. Pull down to refresh."
+                            ui.profileComplete == true ->
+                                "We're just getting started. When a job that matches your skills is posted, we'll send you a notification."
+                            else -> "We're just getting started. Upload your resume and we'll notify you when a job matches your skills."
                         },
-                        action = { if (ui.filter.isActive) SmallButton("Clear filters", viewModel::clearFilters, filled = true) },
+                        action = {
+                            when {
+                                ui.filter.isActive -> SmallButton("Clear filters", viewModel::clearFilters, filled = true)
+                                ui.profileComplete == false -> SmallButton("Upload resume", onEditProfile, filled = true)
+                            }
+                        },
                     )
                 }
                 else -> {

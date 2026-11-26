@@ -16,7 +16,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        if (savedInstanceState == null) PendingJobLink.set(JobLinks.jobIdFrom(intent?.data))
+        if (savedInstanceState == null) PendingJobLink.set(jobIdFrom(intent))
         setContent {
             ReferralTheme { AppRoot() }
         }
@@ -25,6 +25,14 @@ class MainActivity : ComponentActivity() {
     /** A shared job link tapped while the app is already open. */
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        PendingJobLink.set(JobLinks.jobIdFrom(intent.data))
+        PendingJobLink.set(jobIdFrom(intent))
+    }
+
+    /** A shared job link, or a "New match" push (FCM puts its data in the intent's extras). */
+    private fun jobIdFrom(intent: Intent?): String? {
+        JobLinks.jobIdFrom(intent?.data)?.let { return it }
+        val extras = intent?.extras ?: return null
+        if (extras.getString("open_job") != "true") return null
+        return extras.getString("job_id")?.takeIf { JobLinks.isJobId(it) }
     }
 }
